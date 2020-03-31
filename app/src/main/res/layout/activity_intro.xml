@@ -2,15 +2,33 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:padding="10dip"
-                android:background="#ddd">
+                android:background="@color/introBackground">
 
-<Button
-        android:layout_width="wrap_content"
-        android:text="Войти через вк(пока что не реализовано)"
-        android:layout_marginTop="100dp"
-        android:layout_height="wrap_content" android:id="@+id/buttonToMain"/>
-    <androidx.viewpager.widget.ViewPager
+    <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" android:id="@+id/vpMain"/>
+            android:layout_height="match_parent">
+        <LinearLayout
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <androidx.viewpager.widget.ViewPager
+
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" android:id="@+id/vpMain"/>
+        </LinearLayout>
+        <LinearLayout
+                android:layout_weight="3"
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" android:padding="10dip">
+            <Button
+                    android:layout_width="match_parent"
+                    android:background="@color/colorVK"
+                    android:layout_gravity="center"
+                    android:text="Войти через VK(не реализовано)"
+                    android:layout_height="wrap_content" android:id="@+id/buttonToMain"/>
+        </LinearLayout>
+    </LinearLayout>
 </RelativeLayout>

@@ -22,35 +22,5 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class LoginActivity extends AppCompatActivity {
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_intro);
 
-
-
-        ViewPager viewPager = findViewById(R.id.vpMain);
-        ImageAdapter imageAdapter = new ImageAdapter(this);
-        //viewPager.setAdapter(vpAdapter);
-        viewPager.setAdapter(imageAdapter);
-
-
-
-
-
-
-        Button buttonBack = findViewById(R.id.buttonToMain);
-        buttonBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try{
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                    finish();
-                }catch (Exception e){
-
-                }
-            }
-        });
-    }
 }

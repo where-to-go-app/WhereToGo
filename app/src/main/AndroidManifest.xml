@@ -9,7 +9,7 @@
             android:roundIcon="@mipmap/ic_app_round"
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
-        <activity android:name=".IntroFragmentActivity">
+        <activity android:name=".ui.fragments.IntroFragment">
         </activity>
         <activity android:name=".ui.LoginActivity"/>
         <activity android:name=".ui.MainActivity">
