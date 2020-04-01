@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom Sheet -->
+    <dimen name="bottom_sheet_corner_radius">20dp</dimen>
+    <dimen name="bottom_sheet_title">20sp</dimen>
+    <dimen name="bottom_sheet_close_icon">40dp</dimen>
+    <dimen name="bottom_sheet_min_height">60dp</dimen>
+    <dimen name="bottom_sheet_top_offset">60dp</dimen>
+    <dimen name="bottom_sheet_padding">16dp</dimen>
+    <dimen name="bottom_sheet_shadow_height">7dp</dimen>
+</resources>
