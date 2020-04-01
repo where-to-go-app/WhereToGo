@@ -8,4 +8,8 @@
     <string name="nav_search">Поиск</string>
 
     <string name="login_button">Войти через VK</string>
+    <string name="logout_button">Выход</string>
+    <string name="error_message">Что-то пошло не так</string>
+
+    <integer name="com_vk_sdk_AppId">7385373</integer>
 </resources>

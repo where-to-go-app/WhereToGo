@@ -1,5 +1,6 @@
 package com.wheretogo.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
@@ -15,13 +16,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.vk.api.sdk.VK;
 import com.wheretogo.R;
 import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.wheretogo.ui.fragments.CreateFragment;
 import com.wheretogo.ui.fragments.MapFragment;
 import com.wheretogo.ui.fragments.SettingsFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SettingsFragment.OnLogoutListener {
 
     private BottomNavigationView bottomNavigation;
     private FrameLayout placeholder;
@@ -31,9 +33,18 @@ public class MainActivity extends AppCompatActivity {
     private PlacesAdapter panelAdapter;
     private BottomSheetBehavior panelBehavior;
 
+    private final String TITLE_EXTRA = "title_extra";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (!VK.isLoggedIn()) {
+            Intent intent = new Intent(this, IntroActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
         setContentView(R.layout.activity_main);
 
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDarkTransparent));
@@ -119,9 +130,14 @@ public class MainActivity extends AppCompatActivity {
         panelTitle = findViewById(R.id.panelTitle);
     }
 
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        panelTitle.setText(savedInstanceState.getString(TITLE_EXTRA));
+    }
 
     private void replaceFragment(Fragment fragment) {
-        //
         if (fragment instanceof MapFragment && getSupportFragmentManager().findFragmentById(R.id.placeholder) instanceof  MapFragment) {
             return;
         }
@@ -130,4 +146,19 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putString(TITLE_EXTRA, panelTitle.getText().toString());
+
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onLogout() {
+        VK.logout();
+        Intent intent = new Intent(this, IntroActivity.class);
+        startActivity(intent);
+        finish();
+    }
 }
