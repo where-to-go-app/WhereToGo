@@ -42,6 +42,10 @@ dependencies {
     // Yandex maps
     implementation 'com.yandex.android:mapkit:3.5.0'
 
+    implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+
+    implementation 'com.vk:androidsdk:1.6.5'
+
     // Tests
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
