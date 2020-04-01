@@ -19,10 +19,6 @@ import com.wheretogo.ui.fragments.IntroFragment;
 public class MainActivity extends AppCompatActivity {
 
     private final String MY_SETTINGS = "hasVisited";
-    static final int PAGE_COUNT = 10;
-    ViewPager pager;
-    PagerAdapter pagerAdapter;
-    static final String TAG = "myLogs";
 
 
     @Override
@@ -31,15 +27,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         SharedPreferences sp = getSharedPreferences(MY_SETTINGS,
                 Context.MODE_PRIVATE);
-        boolean hasVisited = sp.getBoolean("hasVisited", false);
 
+        // Если приложение запускается первый раз на устройстве, то выводим Intro
+        boolean hasVisited = sp.getBoolean("hasVisited", false);
         if (!hasVisited) {
             Intent intent = new Intent(MainActivity.this, IntroFragment.class);
             startActivity(intent);
             SharedPreferences.Editor e = sp.edit();
             e.putBoolean("hasVisited", true);
-            e.commit(); //
-
+            e.commit();
         }
     }
 
