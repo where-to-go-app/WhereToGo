@@ -129,4 +129,5 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.placeholder, fragment)
                 .commit();
     }
+
 }

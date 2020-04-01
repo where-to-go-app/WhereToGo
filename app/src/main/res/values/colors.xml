@@ -5,6 +5,7 @@
     <color name="colorPrimaryDarkTransparent">#343700B3</color>
     <color name="colorAccent">#03DAC5</color>
 
-    <color name="f">#80FF0000</color>
-    <color name="bottom_sheet_background">@android:color/white</color>
+    <color name="colorVK">#4e6dac</color>
+    <color name="bottomPanelBackground">@android:color/white</color>
+    <color name="introBackground">#054670</color>
 </resources>
