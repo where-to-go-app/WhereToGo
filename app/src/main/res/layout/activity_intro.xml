@@ -1,42 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:background="@color/introBackground">
-
-    <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/introBackground">
         <LinearLayout
                 android:layout_weight="1"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
             <androidx.viewpager.widget.ViewPager
-
+                    android:id="@+id/introViewPager"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent" android:id="@+id/vpMain"/>
+                    android:layout_height="match_parent"/>
         </LinearLayout>
         <com.google.android.material.tabs.TabLayout
+                android:id="@+id/introTabIndicator"
                 android:layout_gravity="center"
                 app:tabBackground="@drawable/indicator_selector"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/tab_indicator"
+                android:layout_height="wrap_content"
                 app:tabIndicatorColor="@color/introBackground">
-
         </com.google.android.material.tabs.TabLayout>
         <LinearLayout
                 android:layout_weight="3"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" android:padding="10dip">
+                android:layout_height="match_parent"
+                android:padding="10dp">
             <Button
+                    android:id="@+id/introLoginButton"
                     android:layout_width="match_parent"
                     android:background="@color/colorVK"
                     android:layout_gravity="center"
-                    android:text="Войти через VK(не реализовано)"
-                    android:layout_height="wrap_content" android:id="@+id/buttonToMain"/>
+                    android:text="@string/login_button"
+                    android:layout_height="wrap_content"/>
         </LinearLayout>
-    </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

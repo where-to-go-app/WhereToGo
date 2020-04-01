@@ -1,21 +1,25 @@
-package com.wheretogo.ui;
+package com.wheretogo.ui.adapters;
 
 import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+
 import androidx.annotation.NonNull;
 import androidx.viewpager.widget.PagerAdapter;
+
 import com.wheretogo.R;
 
-public class ImageAdapter extends PagerAdapter {
+public class IntroAdapter extends PagerAdapter {
     private Context context;
-    private int[] mImageIds = new int[]{
+    private int[] mImageIds = new int[] {
             R.drawable.intro4, R.drawable.intro5, R.drawable.intro6
     };
-    public ImageAdapter(Context context){
+
+    public IntroAdapter(Context context){
         this.context = context;
     }
+
     @Override
     public int getCount() {
         return mImageIds.length;

@@ -1,10 +1,11 @@
 <resources>
     <string name="app_name">WhereToGo</string>
 
-
     <string name="nav_places">Места рядом</string>
     <string name="nav_settings">Настройки</string>
     <string name="nav_create">Создать</string>
     <string name="nav_favorite">Мои места</string>
     <string name="nav_search">Поиск</string>
+
+    <string name="login_button">Войти через VK</string>
 </resources>
