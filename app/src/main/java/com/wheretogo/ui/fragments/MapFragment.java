@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -35,6 +36,7 @@ import java.util.HashMap;
 public class MapFragment extends Fragment{
 
     private MapView mapView;
+    private ImageButton imageButton;
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
@@ -61,6 +63,7 @@ public class MapFragment extends Fragment{
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_map, container, false);
         mapView = root.findViewById(R.id.mapView);
+        imageButton = root.findViewById(R.id.geolocation_button);
         return root;
     }
 
@@ -136,12 +139,7 @@ public class MapFragment extends Fragment{
 
     }
 
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        mapView.onStart();
-        MapKitFactory.getInstance().onStart();
+    private void findGeoPosition(){
         if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             initializeMapWithGeoLocation();
@@ -152,6 +150,19 @@ public class MapFragment extends Fragment{
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSION_REQUEST_CODE);
         }
+    }
+    @Override
+    public void onStart() {
+        super.onStart();
+        mapView.onStart();
+        MapKitFactory.getInstance().onStart();
+        findGeoPosition();
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                findGeoPosition();
+            }
+        });
 
     }
 
