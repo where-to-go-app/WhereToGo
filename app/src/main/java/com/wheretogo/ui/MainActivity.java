@@ -39,11 +39,11 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!VK.isLoggedIn()) {
-            Intent intent = new Intent(this, IntroActivity.class);
-            startActivity(intent);
-            finish();
-        }
+//        if (!VK.isLoggedIn()) {
+//            Intent intent = new Intent(this, IntroActivity.class);
+//            startActivity(intent);
+//            finish();
+//        }
 
         setContentView(R.layout.activity_main);
 

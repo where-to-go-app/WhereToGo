@@ -28,13 +28,14 @@ import com.yandex.mapkit.mapview.MapView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 
 public class MapFragment extends Fragment{
 
     private MapView mapView;
     private final int PERMISSION_REQUEST_CODE = 123;
-
+    private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
 
     @Override
@@ -45,6 +46,7 @@ public class MapFragment extends Fragment{
         MapKitFactory.initialize(getActivity());
         }
         pointsToAddOnMap = new ArrayList<>(16);
+        places = new HashMap<>();
 
 
     }
@@ -54,16 +56,8 @@ public class MapFragment extends Fragment{
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
         View root = inflater.inflate(R.layout.fragment_map, container, false);
         mapView = root.findViewById(R.id.mapView);
-
-
-
-
-
-
-
         return root;
     }
 
@@ -112,10 +106,18 @@ public class MapFragment extends Fragment{
             @Override
             public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
                 if (b){
-                    MapMark mark = new MapMark(cameraPosition.getTarget(), 2);
-                    pointsToAddOnMap.add(mark);
+                    // сделать запрос к серверу и получить список мест
+                    for (MapMark place :places.keySet()){
+                        map.getMapObjects().remove(places.get(place)); // удаляем прошлые метки
+                        places.remove(place);
+                    }
+                    // добавляем новые метки
+                    MapMark mark = new MapMark(cameraPosition.getTarget(),  MapMark.PLACES_TO_SHOW); // создаем объект, который мы привязываем к точке на карте
                     PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(cameraPosition.getTarget());
                     placeMark.setUserData(mark);
+                    places.put(mark, placeMark);
+                    pointsToAddOnMap.add(mark);
+
                     //TODO сделать привязку объекта данных MapMark к меткам на карте, чтобы можно было просто взаимодействовать.
                 }
 

@@ -6,6 +6,11 @@ public class MapMark {
     private int id;
     private Point pt;
     private int type;
+    private String place_name;
+    private String description;
+    private String creator_name;
+    private String country;
+    private String province;
     public static int USER_LOCATION = 1;
     public static int PLACES_TO_SHOW = 2;
 
