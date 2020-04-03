@@ -25,6 +25,7 @@ import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
 import com.yandex.mapkit.map.*;
 import com.yandex.mapkit.mapview.MapView;
+import com.yandex.runtime.image.ImageProvider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +39,7 @@ public class MapFragment extends Fragment{
     private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
 
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,6 +49,7 @@ public class MapFragment extends Fragment{
         }
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
+
 
 
     }
@@ -69,6 +72,7 @@ public class MapFragment extends Fragment{
             if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeMapWithGeoLocation(); // задаем координаты юзера
             }else{
+                // initializeMapWithoutGeoLocation();
                 mapView.getMap().move(
                         new CameraPosition(new Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
                         new Animation(Animation.Type.SMOOTH, 0),
@@ -92,7 +96,7 @@ public class MapFragment extends Fragment{
                         new Animation(Animation.Type.SMOOTH, 1),
                         null);
                 PlacemarkMapObject placemarkMapObject = mapView.getMap().getMapObjects().addPlacemark(location.getPosition());
-                placemarkMapObject.setUserData(new MapMark(location.getPosition(), 1));
+                placemarkMapObject.setUserData(new MapMark(location.getPosition(), MapMark.USER_LOCATION));
             }
 
             @Override
@@ -106,19 +110,23 @@ public class MapFragment extends Fragment{
             @Override
             public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
                 if (b){
-                    // сделать запрос к серверу и получить список мест
+                    final ImageProvider placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);
+                    VisibleRegion mapVisibleRegion = map.getVisibleRegion();
+
+                    // TODO сделать запрос к серверу и получить список мест
                     for (MapMark place :places.keySet()){
                         map.getMapObjects().remove(places.get(place)); // удаляем прошлые метки
                         places.remove(place);
                     }
                     // добавляем новые метки
                     MapMark mark = new MapMark(cameraPosition.getTarget(),  MapMark.PLACES_TO_SHOW); // создаем объект, который мы привязываем к точке на карте
-                    PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(cameraPosition.getTarget());
-                    placeMark.setUserData(mark);
+                    PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(
+                            cameraPosition.getTarget(),
+                            placeMarkImg);
+                    placeMark.setUserData(mark.getType());
                     places.put(mark, placeMark);
                     pointsToAddOnMap.add(mark);
 
-                    //TODO сделать привязку объекта данных MapMark к меткам на карте, чтобы можно было просто взаимодействовать.
                 }
 
             }
@@ -144,6 +152,7 @@ public class MapFragment extends Fragment{
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     PERMISSION_REQUEST_CODE);
         }
+
     }
 
     @Override
