@@ -7,16 +7,27 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.transition.Fade;
+import androidx.transition.Scene;
+import androidx.transition.TransitionManager;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.wheretogo.R;
 import com.wheretogo.data.BuildVars;
 import com.wheretogo.models.MapMark;
+import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKit;
 import com.yandex.mapkit.MapKitFactory;
@@ -24,7 +35,12 @@ import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.location.Location;
 import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
-import com.yandex.mapkit.map.*;
+import com.yandex.mapkit.map.CameraListener;
+import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.CameraUpdateSource;
+import com.yandex.mapkit.map.Map;
+import com.yandex.mapkit.map.PlacemarkMapObject;
+import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -37,6 +53,21 @@ public class MapFragment extends Fragment{
 
     private MapView mapView;
     private ImageButton imageButton;
+    private LinearLayout panelRoot;
+    private TextView panelTitle;
+    private FrameLayout panelPlaceholder;
+    private BottomSheetBehavior panelBehavior;
+    private static final int LAYOUT_LIST = R.layout.layout_map_list;
+    private static final int LAYOUT_ITEM = R.layout.layout_map_item;
+
+    // layout list
+    private RecyclerView placesList;
+    private PlacesAdapter adapter;
+
+    // layout item
+    private ImageView photo;
+    private TextView name;
+
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
@@ -51,9 +82,6 @@ public class MapFragment extends Fragment{
         }
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
-
-
-
     }
 
 
@@ -62,9 +90,28 @@ public class MapFragment extends Fragment{
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_map, container, false);
+        findViews(root);
+        panelBehavior = BottomSheetBehavior.from(panelRoot);
+        panelBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+            }
+        });
+
+        inflatePanelLayout(LAYOUT_LIST, getString(R.string.nav_places));
+        return root;
+    }
+
+    private void findViews(View root) {
         mapView = root.findViewById(R.id.mapView);
         imageButton = root.findViewById(R.id.geolocation_button);
-        return root;
+        panelRoot = root.findViewById(R.id.panelRoot);
+        panelTitle = root.findViewById(R.id.panelTitle);
+        panelPlaceholder = root.findViewById(R.id.panelPlaceholder);
     }
 
     @Override
@@ -74,7 +121,7 @@ public class MapFragment extends Fragment{
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeMapWithGeoLocation(); // задаем координаты юзера
-            }else{
+            } else {
                 // initializeMapWithoutGeoLocation();
                 mapView.getMap().move(
                         new CameraPosition(new Point(55.751574, 37.573856), 11.0f, 0.0f, 0.0f),
@@ -139,8 +186,8 @@ public class MapFragment extends Fragment{
 
     }
 
-    private void findGeoPosition(){
-        if (ContextCompat.checkSelfPermission(this.getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+    private void findGeoPosition() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             initializeMapWithGeoLocation();
 
@@ -151,19 +198,14 @@ public class MapFragment extends Fragment{
                     PERMISSION_REQUEST_CODE);
         }
     }
+
     @Override
     public void onStart() {
         super.onStart();
         mapView.onStart();
         MapKitFactory.getInstance().onStart();
         findGeoPosition();
-        imageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                findGeoPosition();
-            }
-        });
-
+        imageButton.setOnClickListener(v -> findGeoPosition());
     }
 
     @Override
@@ -171,5 +213,22 @@ public class MapFragment extends Fragment{
         super.onStop();
         mapView.onStop();
         MapKitFactory.getInstance().onStop();
+    }
+
+    private void inflatePanelLayout(int res, String title) {
+        panelTitle.setText(title);
+        Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
+        TransitionManager.go(scene, new Fade());
+        if (res == LAYOUT_LIST) {
+            placesList = panelPlaceholder.findViewById(R.id.mapListPlaces);
+            adapter = new PlacesAdapter((view) -> {
+                inflatePanelLayout(LAYOUT_ITEM, "Place Name");
+            });
+            placesList.setAdapter(adapter);
+            placesList.setLayoutManager(new LinearLayoutManager(getContext()));
+        } else if (res == LAYOUT_ITEM){
+            photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
+            name = panelPlaceholder.findViewById(R.id.mapItemName);
+        }
     }
 }
