@@ -1,32 +1,36 @@
 package com.wheretogo.ui.adapters;
 
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.wheretogo.utils.DisplayUtils;
+import com.wheretogo.R;
+import com.wheretogo.models.Place;
 
-public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlacesViewHolder> {
+import java.util.Collections;
+import java.util.List;
 
+public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewHolder> {
+    private View.OnClickListener onItemClickCallback;
+    private List<Place> places = Collections.emptyList();
+
+    public PlacesAdapter(View.OnClickListener onItemClickCallback) {
+        this.onItemClickCallback = onItemClickCallback;
+    }
 
     @NonNull
     @Override
-    public PlacesViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        FrameLayout root = new FrameLayout(parent.getContext());
-        TextView textView = new TextView(parent.getContext());
-        textView.setText("Placeholder");
-        textView.setTextSize(DisplayUtils.spToPx(parent.getContext(), 14));
-        root.addView(textView);
-        return new PlacesViewHolder(root);
+    public PlaceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_place, parent, false);
+        return new PlaceViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull PlacesViewHolder holder, int position) {
-
+    public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
+        // TODO
     }
 
     @Override
@@ -34,9 +38,14 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlacesView
         return 30;
     }
 
-    static class PlacesViewHolder extends RecyclerView.ViewHolder {
-        PlacesViewHolder(View view) {
+    public void refreshData(List<Place> places) {
+        this.places = places;
+    }
+
+    class PlaceViewHolder extends RecyclerView.ViewHolder {
+        PlaceViewHolder(View view) {
             super(view);
+            view.setOnClickListener(onItemClickCallback);
         }
     }
 }
