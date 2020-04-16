@@ -42,7 +42,10 @@ dependencies {
     // Yandex maps
     implementation 'com.yandex.android:mapkit:3.5.0'
 
+    // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.8.1'
+    implementation 'com.squareup.retrofit2:converter-gson:2.7.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
 
     implementation 'com.vk:androidsdk:1.6.5'
 
