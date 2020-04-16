@@ -35,12 +35,7 @@ import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.location.Location;
 import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
-import com.yandex.mapkit.map.CameraListener;
-import com.yandex.mapkit.map.CameraPosition;
-import com.yandex.mapkit.map.CameraUpdateSource;
-import com.yandex.mapkit.map.Map;
-import com.yandex.mapkit.map.PlacemarkMapObject;
-import com.yandex.mapkit.map.VisibleRegion;
+import com.yandex.mapkit.map.*;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -63,6 +58,7 @@ public class MapFragment extends Fragment{
     // layout list
     private RecyclerView placesList;
     private PlacesAdapter adapter;
+    private int placesListState;
 
     // layout item
     private ImageView photo;
@@ -71,6 +67,7 @@ public class MapFragment extends Fragment{
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
+    private ImageProvider placeMarkImg;
 
 
     @Override
@@ -82,6 +79,7 @@ public class MapFragment extends Fragment{
         }
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
+        placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);
     }
 
 
@@ -160,7 +158,7 @@ public class MapFragment extends Fragment{
             @Override
             public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
                 if (b){
-                    final ImageProvider placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);
+
                     VisibleRegion mapVisibleRegion = map.getVisibleRegion();
 
                     // TODO сделать запрос к серверу и получить список мест
@@ -173,9 +171,23 @@ public class MapFragment extends Fragment{
                     PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(
                             cameraPosition.getTarget(),
                             placeMarkImg);
+                    MapObjectTapListener onPointTabListener = new MapObjectTapListener() {
+                        @Override
+                        public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
+                           // PlacemarkMapObject placeMark = (PlacemarkMapObject) mapObject;
+                            inflatePanelLayout(LAYOUT_ITEM, "MyPlace");
+                            return  true;
+                        }
+                    };
+                    placeMark.addTapListener(onPointTabListener);
                     placeMark.setUserData(mark.getType());
                     places.put(mark, placeMark);
                     pointsToAddOnMap.add(mark);
+
+                    // переводим лист мест в обычное состояние
+                    if (placesListState == LAYOUT_ITEM){
+                        inflatePanelLayout(LAYOUT_LIST, "Места рядом");
+                    }
 
                 }
 
@@ -226,9 +238,12 @@ public class MapFragment extends Fragment{
             });
             placesList.setAdapter(adapter);
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
+            placesListState = LAYOUT_LIST;
         } else if (res == LAYOUT_ITEM){
             photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
             name = panelPlaceholder.findViewById(R.id.mapItemName);
+            placesListState = LAYOUT_ITEM;
+
         }
     }
 }

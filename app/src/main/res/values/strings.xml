@@ -11,5 +11,10 @@
     <string name="logout_button">Выход</string>
     <string name="error_message">Что-то пошло не так</string>
 
+    <string name="newPlaceName_desc">Введите название и описание места</string>
+    <string name="newPlace_addImage">Добавить фото</string>
+    <string name="newPlace_addPlace">Добавить Место</string>
+
+
     <integer name="com_vk_sdk_AppId">7385373</integer>
 </resources>
