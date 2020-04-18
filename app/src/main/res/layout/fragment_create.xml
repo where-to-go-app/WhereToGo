@@ -15,7 +15,8 @@ android:layout_height="wrap_content">
 <com.yandex.mapkit.mapview.MapView
         android:id="@+id/createMapView"
         android:layout_width="match_parent"
-        android:layout_height="300dp" >
+        android:layout_height="300dp"
+        app:movable="true">
 
 </com.yandex.mapkit.mapview.MapView>
 
