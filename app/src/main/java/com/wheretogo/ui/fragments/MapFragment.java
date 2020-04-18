@@ -237,6 +237,7 @@ public class MapFragment extends Fragment{
                 inflatePanelLayout(LAYOUT_ITEM, "Place Name");
             });
             placesList.setAdapter(adapter);
+            placesList.setNestedScrollingEnabled(false);
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
             placesListState = LAYOUT_LIST;
         } else if (res == LAYOUT_ITEM){
