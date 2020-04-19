@@ -1,29 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content">
+<androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
     <ImageView
             android:layout_marginEnd="10dp"
             android:layout_marginStart="10dp"
             android:id="@+id/imagePhoto"
             android:layout_width="200dp"
             android:layout_height="200dp"
-            android:background="@color/colorPrimaryDark"/>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            />
 
     <ImageView
             android:id="@+id/is_main_photo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:background="@color/colorAccent"
-            android:layout_marginStart="10dp"/>
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toTopOf="@+id/imagePhoto"
+            app:layout_constraintStart_toStartOf="@+id/imagePhoto"
+            />
 
     <ImageView
             android:id="@+id/delete_photo"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:background="@color/colorPrimary"
-            android:layout_toEndOf="@+id/imagePhoto"
-            android:layout_marginStart="-51dp"/>
+            app:layout_constraintTop_toTopOf="@+id/imagePhoto"
+            app:layout_constraintEnd_toEndOf="@+id/imagePhoto"
+            />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

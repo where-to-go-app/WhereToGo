@@ -1,11 +1,14 @@
 package com.wheretogo.models;
 
+import android.graphics.Bitmap;
+
+
 public class NewPlacePhoto {
     private  boolean isMain;
-    private String res;
+    private Bitmap bitmap;
 
-    public NewPlacePhoto(String res) {
-        this.res = res;
+    public NewPlacePhoto(Bitmap bitmap) {
+        this.bitmap = bitmap;
         isMain = false;
     }
 
@@ -13,7 +16,11 @@ public class NewPlacePhoto {
         return isMain;
     }
 
-    public String getRes() {
-        return res;
+    public void setMain(boolean main) {
+        isMain = main;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 }

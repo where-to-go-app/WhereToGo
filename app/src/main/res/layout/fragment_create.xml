@@ -7,20 +7,7 @@
         android:orientation="vertical"
 >
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-xmlns:android="http://schemas.android.com/apk/res/android"
-android:layout_width="match_parent"
-android:layout_height="wrap_content">
 
-<com.yandex.mapkit.mapview.MapView
-        android:id="@+id/createMapView"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        app:movable="true">
-
-</com.yandex.mapkit.mapview.MapView>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -33,41 +20,58 @@ android:layout_height="wrap_content">
         xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/bottom_dialog_shape">
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/map_coordinator_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
 
+            <com.wheretogo.ui.custom.CustomMapView
+                    android:id="@+id/createMapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    app:movable="true">
+
+            </com.wheretogo.ui.custom.CustomMapView>
+            <ImageView android:layout_width="50dp"
+                       android:layout_height="50dp"
+                       android:background="@drawable/place_point"
+                       android:layout_gravity="center"
+            />
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
         <TextView
                 android:id="@+id/createPlace_desc"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/newPlaceName_desc"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="50dp"
-                android:textSize="12sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                android:textSize="24sp"
+                android:text="Aдрес: "
+                app:layout_constraintStart_toStartOf="@+id/map_coordinator_layout"
+                app:layout_constraintTop_toBottomOf="@+id/map_coordinator_layout"
 
         />
         <EditText
                 android:id="@+id/newPlaceName"
-                android:layout_width="300dp"
-                android:layout_height="20dp"
-                android:text="@string/newPlaceName_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:textSize="12sp"
-                android:textColor="@color/introBackground"
-                android:hint="Введите сообщение"
+                android:textSize="24sp"
+                android:hint="@string/newPlaceNameHint"
                 app:layout_constraintTop_toBottomOf="@+id/createPlace_desc"
                 app:layout_constraintStart_toStartOf="@+id/createPlace_desc"
         />
-
-
         <EditText
                 android:id="@+id/newPlaceDescription"
-                android:layout_width="300dp"
-                android:layout_height="20dp"
-                android:text="@string/newPlaceName_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:textSize="24sp"
                 android:inputType="textMultiLine"
+                android:hint="@string/newPlaceDescHint"
                 app:layout_constraintTop_toBottomOf="@+id/newPlaceName"
                 app:layout_constraintStart_toStartOf="@+id/newPlaceName"
         />
