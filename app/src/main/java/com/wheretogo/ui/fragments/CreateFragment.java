@@ -1,22 +1,19 @@
 package com.wheretogo.ui.fragments;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Camera;
-import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.provider.MediaStore;
 import android.view.*;
 
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -26,21 +23,15 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.wheretogo.R;
-import com.wheretogo.data.BuildVars;
 import com.wheretogo.models.NewPlacePhoto;
 import com.wheretogo.ui.adapters.NewPlacePhotosAdapter;
 import com.wheretogo.ui.custom.CustomMapView;
 import com.yandex.mapkit.MapKitFactory;
-import com.yandex.mapkit.geometry.Geo;
-import com.yandex.mapkit.map.CameraListener;
-import com.yandex.mapkit.map.CameraPosition;
-import com.yandex.mapkit.map.CameraUpdateSource;
-import com.yandex.mapkit.map.Map;
-import com.yandex.mapkit.mapview.MapView;
 
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -54,14 +45,20 @@ public class CreateFragment extends Fragment {
     private RecyclerView photosList;
     private NewPlacePhotosAdapter photosAdapter;
 
-    ArrayList<NewPlacePhoto> arr;
+    private ArrayList<NewPlacePhoto> placePhotos;
 
 
     private static final int REQUEST_CAMERA = 1;
     private static final int REQUEST_GALLERY = 2;
 
-    private static final int READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE = 10;
+    private static final int READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE = 10;
+    private static final int READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE = 11;
+    private static final int CAMERA_PERMISSION_REQUEST_CODE = 12;
 
+    private static final int YES_GALLERY = 101;
+    private static final int YES_GALLERY_AND_CAMERA = 102;
+    private static final int YES_CAMERA = 103;
+    private static final int NO_GALLERY_AND_CAMERA = 100;
 
     @Nullable
     @Override
@@ -79,8 +76,8 @@ public class CreateFragment extends Fragment {
         addPhotoButton = root.findViewById(R.id.addPhoto_button);
         submitButton = root.findViewById(R.id.createPlace_submit);
         photosList = root.findViewById(R.id.newPlacePhotos);
-        arr = new ArrayList<NewPlacePhoto>();
-        photosAdapter = new NewPlacePhotosAdapter(arr);
+        placePhotos = new ArrayList<NewPlacePhoto>();
+        photosAdapter = new NewPlacePhotosAdapter(placePhotos);
         photosList.setAdapter(photosAdapter);
         photosList.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
     }
@@ -100,29 +97,97 @@ public class CreateFragment extends Fragment {
 
     private void askPhotoPermission() {
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            loadGallery();
-        } else{
-            // Permission to access the location is missing. Show rationale and request permission
+            startDialog(YES_GALLERY_AND_CAMERA);
+        } else if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED){
             requestPermissions(
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                    READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE);
+                    new String[]{Manifest.permission.CAMERA},
+                    CAMERA_PERMISSION_REQUEST_CODE);
+        }else if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED){
+            requestPermissions(
+                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+            READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE);
+        }
+        else{
+            System.out.println("4");
+            requestPermissions(
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                            Manifest.permission.CAMERA},
+                    READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                loadGallery();
+        if (requestCode == READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length==2){
+                System.out.println(Arrays.toString(grantResults));
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    startDialog(YES_GALLERY_AND_CAMERA);
+                }
+                else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startDialog(YES_GALLERY);
+                }
+                else if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    startDialog(YES_GALLERY);
+                }else{
+                    startDialog(NO_GALLERY_AND_CAMERA);
+                }
+            }
+        }else if (requestCode == CAMERA_PERMISSION_REQUEST_CODE){
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                startDialog(YES_GALLERY_AND_CAMERA);
+            }else{
+                startDialog(YES_GALLERY);
+            }
+        }else if (requestCode == READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE){
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                startDialog(YES_GALLERY_AND_CAMERA);
+            }else{
+                startDialog(YES_CAMERA);
             }
         }
     }
-    public void loadGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, REQUEST_GALLERY);
+    private void startDialog(int type) {
+        AlertDialog.Builder myAlertDialog = new AlertDialog.Builder(
+                getActivity());
+        myAlertDialog.setTitle("Загрузка фотогравфии");
+        myAlertDialog.setMessage("Как вы хотите загрузить изображение?");
+        if (type == YES_GALLERY || type == YES_GALLERY_AND_CAMERA) {
+            myAlertDialog.setPositiveButton("Gallery",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface arg0, int arg1) {
+                            Intent pictureActionIntent = null;
+
+                            pictureActionIntent = new Intent(
+                                    Intent.ACTION_PICK,
+                                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                            startActivityForResult(
+                                    pictureActionIntent,
+                                    REQUEST_GALLERY);
+
+                        }
+                    });
+        }
+        if (type == YES_CAMERA || type == YES_GALLERY_AND_CAMERA) {
+        myAlertDialog.setNegativeButton("Camera",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface arg0, int arg1) {
+
+                        Intent intent = new Intent(
+                                MediaStore.ACTION_IMAGE_CAPTURE);
+                        startActivityForResult(intent,
+                                REQUEST_CAMERA);
+
+                    }
+                });
+        }
+        myAlertDialog.show();
     }
 
     @Override
@@ -130,12 +195,18 @@ public class CreateFragment extends Fragment {
         switch (requestCode) {
             case REQUEST_CAMERA:
 
-                break;
+                if (data != null) {
+                    Bitmap photo = (Bitmap) data.getExtras().get("data");
+                    placePhotos.add(new NewPlacePhoto(photo));
+                    photosAdapter.notifyDataSetChanged();
+                    break;
+                    }
+
             case REQUEST_GALLERY:
                 if (resultCode == RESULT_OK) {
                     final Uri imageUri = data.getData();
                     try {
-                        arr.add(new NewPlacePhoto(decodeUri(imageUri)));
+                        placePhotos.add(new NewPlacePhoto(decodeUri(imageUri)));
                         photosAdapter.notifyDataSetChanged();
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
