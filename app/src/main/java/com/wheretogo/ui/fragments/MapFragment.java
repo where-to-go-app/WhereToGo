@@ -35,7 +35,14 @@ import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.location.Location;
 import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
-import com.yandex.mapkit.map.*;
+import com.yandex.mapkit.map.CameraListener;
+import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.CameraUpdateSource;
+import com.yandex.mapkit.map.Map;
+import com.yandex.mapkit.map.MapObject;
+import com.yandex.mapkit.map.MapObjectTapListener;
+import com.yandex.mapkit.map.PlacemarkMapObject;
+import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -74,15 +81,13 @@ public class MapFragment extends Fragment{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         MapKitFactory.setApiKey(BuildVars.YA_MAP_API_KEY);
-        if (getActivity() != null){
-        MapKitFactory.initialize(getActivity());
+        if (getActivity() != null) {
+            MapKitFactory.initialize(getActivity());
         }
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);
     }
-
-
 
     @Nullable
     @Override
@@ -157,7 +162,7 @@ public class MapFragment extends Fragment{
         CameraListener cameraListener = new CameraListener() {
             @Override
             public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
-                if (b){
+                if (b) {
 
                     VisibleRegion mapVisibleRegion = map.getVisibleRegion();
 
@@ -190,7 +195,6 @@ public class MapFragment extends Fragment{
                     }
 
                 }
-
             }
         };
         mapView.getMap().addCameraListener(cameraListener);
@@ -203,7 +207,7 @@ public class MapFragment extends Fragment{
                 == PackageManager.PERMISSION_GRANTED) {
             initializeMapWithGeoLocation();
 
-        } else{
+        } else {
             // Permission to access the location is missing. Show rationale and request permission
             requestPermissions(
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},

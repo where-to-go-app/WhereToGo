@@ -1,17 +1,13 @@
 package com.wheretogo.ui.adapters;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.media.Image;
-import android.net.sip.SipSession;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.google.android.gms.common.images.ImageManager;
+
 import com.wheretogo.R;
 import com.wheretogo.models.NewPlacePhoto;
 
@@ -65,7 +61,6 @@ public class NewPlacePhotosAdapter extends RecyclerView.Adapter<NewPlacePhotosAd
 
                 }
             });
-
         }
     }
 }

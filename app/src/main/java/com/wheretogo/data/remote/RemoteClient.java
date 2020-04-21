@@ -2,6 +2,7 @@ package com.wheretogo.data.remote;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.wheretogo.data.remote.responses.DefaultResponse;
 
 import java.io.IOException;
 import java.util.concurrent.Executor;
@@ -37,18 +38,23 @@ public class RemoteClient {
         return remoteApi;
     }
 
-    <T extends DefaultResponse> T performRequest(Call<T> call) {
+    public <T extends DefaultResponse> void performRequest(Call<T> call, Request<T> req) {
+
         executor.execute(() -> {
             try {
                 Response response = call.execute();
                 if (response.isSuccessful()) {
-
+                    return req.onResult((T) response.body());
                 } else {
-                    return new DefaultResponse();
+                    return req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
                 }
             } catch (IOException e) {
-
+                return req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
             }
         });
+    }
+
+    public interface Request<T extends DefaultResponse> {
+        void onResult(T response);
     }
 }
