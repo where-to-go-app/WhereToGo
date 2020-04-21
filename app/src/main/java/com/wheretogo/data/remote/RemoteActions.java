@@ -13,21 +13,9 @@ public class RemoteActions {
         this.client = client;
     }
 
-    public void getPlacesAround(PointF location, PlacesAroundCallback callback) {
-        client.enqueue(client.getRemoteApi().placesAround(), new RemoteClient.Request<List<Place>>() {
-            @Override
-            public void onSuccess(List<Place> places) {
-                if (callback != null) {
-                    callback.onSuccess(places);
-                }
-            }
+    public void getPlacesAround(PointF location, PlacesCallback callback) {
+        List<Place> places = client.performRequest(client.getRemoteApi().placesAround());
+        callback.onSuccess();
 
-            @Override
-            public void onFailure(String error) {
-                if (callback != null) {
-                    callback.onError(error);
-                }
-            }
-        });
     }
 }

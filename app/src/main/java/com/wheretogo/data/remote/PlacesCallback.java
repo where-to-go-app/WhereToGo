@@ -4,7 +4,7 @@ import com.wheretogo.models.Place;
 
 import java.util.List;
 
-public interface PlacesAroundCallback {
+public interface PlacesCallback {
     void onSuccess(List<Place> places);
 
     void onError(String error);

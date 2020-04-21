@@ -37,24 +37,18 @@ public class RemoteClient {
         return remoteApi;
     }
 
-    <T> void enqueue(Call<T> call, Request<T> request) {
+    <T extends DefaultResponse> T performRequest(Call<T> call) {
         executor.execute(() -> {
             try {
                 Response response = call.execute();
                 if (response.isSuccessful()) {
-                    request.onSuccess((T) response.body());
+
                 } else {
-                    request.onFailure(String.valueOf(response.code()));
+                    return new DefaultResponse();
                 }
             } catch (IOException e) {
-                request.onFailure(e.getMessage());
+
             }
         });
-    }
-
-    interface Request<T> {
-        void onSuccess(T data);
-
-        void onFailure(String error);
     }
 }
