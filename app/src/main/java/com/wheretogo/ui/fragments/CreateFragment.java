@@ -14,6 +14,8 @@ import android.view.*;
 
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -41,6 +43,7 @@ public class CreateFragment extends Fragment {
     private CustomMapView createMapView;
     private Button addPhotoButton;
     private Button submitButton;
+    private TextView errorText;
 
     private RecyclerView photosList;
     private NewPlacePhotosAdapter photosAdapter;
@@ -74,12 +77,14 @@ public class CreateFragment extends Fragment {
         placeName = root.findViewById(R.id.newPlaceName);
         placeDescription = root.findViewById(R.id.newPlaceDescription);
         addPhotoButton = root.findViewById(R.id.addPhoto_button);
+        errorText = root.findViewById(R.id.error_text);
         submitButton = root.findViewById(R.id.createPlace_submit);
         photosList = root.findViewById(R.id.newPlacePhotos);
         placePhotos = new ArrayList<NewPlacePhoto>();
         photosAdapter = new NewPlacePhotosAdapter(placePhotos);
         photosList.setAdapter(photosAdapter);
         photosList.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
+
     }
 
     private void createBinds(){
@@ -92,7 +97,52 @@ public class CreateFragment extends Fragment {
 
         });
         // TODO при каждом изменении карты получать адрес центра карты. (нужен геокодер и ретрофит)
+        submitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (placeName.getText().length() == 0) {
 
+                    errorText.setText("Название места не должно быть пустым");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                if (placeName.getText().length() > 255) {
+                    errorText.setText("Название места не должно превышать 255 символов");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                if (placeDescription.getText().length() == 0) {
+                    errorText.setText("Описание места не должно быть пустым");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                if (placeDescription.getText().length() > 1023) {
+                    errorText.setText("Название места не должно превышать 1023 символов");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                if (placePhotos.size() == 0){
+                    errorText.setText("Добавьте хотя бы одну фотографию");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                boolean isThereMainPhoto = false;
+                for (NewPlacePhoto ph: placePhotos
+                     ) {
+                    if (ph.isMain()){
+                        isThereMainPhoto = true;
+                        break;
+                    }
+                }
+                if (!isThereMainPhoto){
+                    errorText.setText("Сделайте хотя бы одну фотографию главной");
+                    errorText.setVisibility(View.VISIBLE);
+                    return;
+                }
+                errorText.setVisibility(View.GONE);
+                // TODO сделать вызов create_place
+            }
+        });
     }
 
     private void askPhotoPermission() {
@@ -206,7 +256,7 @@ public class CreateFragment extends Fragment {
                 if (resultCode == RESULT_OK) {
                     final Uri imageUri = data.getData();
                     try {
-                        placePhotos.add(new NewPlacePhoto(decodeUri(imageUri)));
+                        placePhotos.add(new NewPlacePhoto(decodeUriAndResize(imageUri)));
                         photosAdapter.notifyDataSetChanged();
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
@@ -232,7 +282,7 @@ public class CreateFragment extends Fragment {
         MapKitFactory.getInstance().onStop();
     }
 
-    private Bitmap decodeUri(Uri selectedImage) throws FileNotFoundException {
+    private Bitmap decodeUriAndResize(Uri selectedImage) throws FileNotFoundException {
         BitmapFactory.Options op = new BitmapFactory.Options();
         op.inJustDecodeBounds = true;
         BitmapFactory.decodeStream(

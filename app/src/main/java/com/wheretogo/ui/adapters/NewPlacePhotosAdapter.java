@@ -37,6 +37,7 @@ public class NewPlacePhotosAdapter extends RecyclerView.Adapter<NewPlacePhotosAd
 
     @Override
     public void onBindViewHolder(@NonNull PlaceViewHolder placeViewHolder, int i) {
+
         placeViewHolder.index = i;
         if (photos.get(i).isMain()){
             placeViewHolder.isMainImg.setVisibility(View.VISIBLE);
