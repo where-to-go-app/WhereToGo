@@ -14,6 +14,11 @@
     <string name="newPlaceName_desc">Введите название и описание места</string>
     <string name="newPlace_addImage">Добавить фото</string>
     <string name="newPlace_addPlace">Добавить Место</string>
+    <string name="newPlaceNameHint">Введите название места</string>
+    <string name="newPlaceDescHint">Краткое описание места</string>
+    <string name="address_new_place_hint">Aдрес:</string>
+    <string name="addPhotosHint">Добавьте фотографии (нажмите на фотографию, чтобы сделать ее главной. Главная фотография будет являться своеобразным "аватаром места")</string>
+    <string name="createPointMapHint">Отметьте точку на карте</string>
 
 
     <integer name="com_vk_sdk_AppId">7385373</integer>
