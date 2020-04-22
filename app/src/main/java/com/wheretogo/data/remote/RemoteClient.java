@@ -38,18 +38,17 @@ public class RemoteClient {
         return remoteApi;
     }
 
-    public <T extends DefaultResponse> void performRequest(Call<T> call, Request<T> req) {
-
+    <T extends DefaultResponse> void performRequest(final Call<T> call, final Request<T> req) {
         executor.execute(() -> {
             try {
-                Response response = call.execute();
+                Response<T> response = call.execute();
                 if (response.isSuccessful()) {
-                    return req.onResult((T) response.body());
+                    req.onResult(response.body());
                 } else {
-                    return req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
+                    req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
                 }
             } catch (IOException e) {
-                return req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
+                req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
             }
         });
     }

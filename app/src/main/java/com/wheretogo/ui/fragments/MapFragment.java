@@ -26,6 +26,7 @@ import androidx.transition.TransitionManager;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.wheretogo.R;
 import com.wheretogo.data.BuildVars;
+import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.models.MapMark;
 import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.yandex.mapkit.Animation;
@@ -71,6 +72,8 @@ public class MapFragment extends Fragment{
     private ImageView photo;
     private TextView name;
 
+    private PreferenceManager preferenceManager;
+
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
     private ArrayList<MapMark> pointsToAddOnMap;
@@ -84,6 +87,7 @@ public class MapFragment extends Fragment{
         if (getActivity() != null) {
             MapKitFactory.initialize(getActivity());
         }
+        preferenceManager = new PreferenceManager(getContext());
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);

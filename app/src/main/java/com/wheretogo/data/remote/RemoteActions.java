@@ -1,6 +1,6 @@
 package com.wheretogo.data.remote;
 
-import android.graphics.PointF;
+import android.graphics.RectF;
 
 import com.wheretogo.data.remote.responses.DefaultResponse;
 import com.wheretogo.models.Place;
@@ -35,7 +35,14 @@ public class RemoteActions {
     }
 
     public void createPlace(Place place, User user, DefaultCallback<String> callback) {
-        client.performRequest(client.getRemoteApi().createPlace(),
+        client.performRequest(
+                client.getRemoteApi().createPlace(
+                        user.getToken(),
+                        place.getPlaceName(),
+                        place.getPlaceDesc(),
+                        place.getLatitude(),
+                        place.getLongitude(),
+                        place.getAddress()),
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
                         callback.onError(response.getCode());
@@ -45,8 +52,8 @@ public class RemoteActions {
                 });
     }
 
-    public void getPlacesAround(PointF location, DefaultCallback<List<Place>> callback) {
-        client.performRequest(client.getRemoteApi().getPlaceAround(),
+    public void getPlacesAround(User user, RectF rect, DefaultCallback<List<Place>> callback) {
+        client.performRequest(client.getRemoteApi().getPlacesAround(user.getToken(), rect.left, rect.top, rect.right, rect.bottom),
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
                         callback.onError(response.getCode());
