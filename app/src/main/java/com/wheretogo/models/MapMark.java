@@ -14,14 +14,22 @@ public class MapMark {
     public static int USER_LOCATION = 1;
     public static int PLACES_TO_SHOW = 2;
 
-    public MapMark(Point pt, int type){
+    public MapMark(Point pt, int id, int type, String place_name){
+        this.id = id;
         this.pt = pt;
         this.type = type;
+        this.place_name = place_name;
     }
     public int getType(){
         return type;
     }
 
 
+    public Point getPt() {
+        return pt;
+    }
 
+    public String getPlace_name() {
+        return place_name;
+    }
 }

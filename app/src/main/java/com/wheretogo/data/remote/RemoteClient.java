@@ -16,7 +16,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RemoteClient {
-    private static final String REMOTE_URL = "";
+    private static final String REMOTE_URL = "http://valer14356.pythonanywhere.com/";
     private RemoteApi remoteApi;
     private Executor executor = Executors.newSingleThreadExecutor();
 

@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PointF;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -25,14 +26,35 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wheretogo.R;
+import com.wheretogo.data.remote.DefaultCallback;
+import com.wheretogo.data.remote.RemoteActions;
+import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.data.remote.geocoder.GeocoderRemoteActions;
+import com.wheretogo.data.remote.geocoder.GeocoderRemoteClient;
 import com.wheretogo.models.NewPlacePhoto;
+import com.wheretogo.models.Place;
+import com.wheretogo.models.User;
+import com.wheretogo.models.geocoderModel.AddressDetails;
+import com.wheretogo.models.geocoderModel.Country;
+import com.wheretogo.models.geocoderModel.GeocodeModel;
 import com.wheretogo.ui.adapters.NewPlacePhotosAdapter;
 import com.wheretogo.ui.custom.CustomMapView;
 import com.yandex.mapkit.MapKitFactory;
+import com.yandex.mapkit.geometry.Point;
+import com.yandex.mapkit.map.CameraListener;
+import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.CameraUpdateSource;
+import com.yandex.mapkit.map.Map;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -43,11 +65,13 @@ public class CreateFragment extends Fragment {
     private Button addPhotoButton;
     private Button submitButton;
     private TextView errorText;
+    private TextView addressText;
 
     private RecyclerView photosList;
     private NewPlacePhotosAdapter photosAdapter;
 
     private ArrayList<NewPlacePhoto> placePhotos;
+
 
 
     private static final int REQUEST_CAMERA = 1;
@@ -72,6 +96,7 @@ public class CreateFragment extends Fragment {
     }
 
     private void findViews(View root) {
+        addressText = root.findViewById(R.id.createPlace_address);
         createMapView = root.findViewById(R.id.createMapView);
         placeName = root.findViewById(R.id.newPlaceName);
         placeDescription = root.findViewById(R.id.newPlaceDescription);
@@ -95,6 +120,49 @@ public class CreateFragment extends Fragment {
             }
 
         });
+        CameraListener cameraListener = new CameraListener() {
+            @Override
+            public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
+                if (b) {
+                    Point point = map.getCameraPosition().getTarget();
+                    String geocode = point.getLongitude() + ";" + point.getLatitude();
+                    System.out.println(geocode);
+                    GeocoderRemoteActions geocoderRemoteActions = new GeocoderRemoteActions(new GeocoderRemoteClient());
+                    geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
+                        @Override
+                        public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
+
+                            Country addressDetails = response.body().getResponse().getGeoObjectCollection()
+                                    .getFeatureMember()
+                                    .get(0)
+                                    .getGeoObject()
+                                    .getMetaDataProperty()
+                                    .getGeocoderMetaData()
+                                    .getAddressDetails()
+                                    .getCountry();
+                            String address = addressDetails.getAddressLine();
+                            if (addressDetails.getCountryName() != null) {
+                                String country = addressDetails.getCountryName();
+                            }
+                            if (addressDetails.getAdministrativeArea() != null && addressDetails.getAdministrativeArea().getLocality() != null) {
+                                String province = addressDetails
+                                        .getAdministrativeArea()
+                                        .getLocality()
+                                        .getLocalityName();
+                            }
+                            addressText.setText("Адрес: "+address);
+                    }
+
+                        @Override
+                        public void onFailure(Call<GeocodeModel> call, Throwable throwable) {
+                            errorText.setText("Не получилось отправить запрос. Проверьте подключение к интернету");
+                        }
+                    });
+                }
+            }
+        };
+
+        createMapView.getMap().addCameraListener(cameraListener);
         // TODO при каждом изменении карты получать адрес центра карты. (нужен геокодер и ретрофит)
         submitButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,6 +208,19 @@ public class CreateFragment extends Fragment {
                 }
                 errorText.setVisibility(View.GONE);
                 // TODO сделать вызов create_place
+//                RemoteActions remoteActions = new RemoteActions(new RemoteClient());
+//                HashMap<String, RequestBody> filesMap = new HashMap<String, RequestBody>();
+//                remoteActions.createPlace(
+//                        new Place(placeName.getText().toString(),
+//                                placeDescription.getText().toString(),
+//                                new Float(60.554),
+//                                new Float(32.554),
+//                                "Russia",
+//                                "Nevskiy pr 24"),
+//                        new User("vasya", "pupkin", 1, "12345"),
+//                        filesMap,
+//                        );
+//
             }
         });
     }

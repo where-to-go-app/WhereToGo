@@ -5,8 +5,10 @@ import android.graphics.RectF;
 import com.wheretogo.data.remote.responses.DefaultResponse;
 import com.wheretogo.models.Place;
 import com.wheretogo.models.User;
+import okhttp3.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.wheretogo.data.BuildVars.SECRET_STRING;
 
@@ -34,7 +36,7 @@ public class RemoteActions {
                 });
     }
 
-    public void createPlace(Place place, User user, DefaultCallback<String> callback) {
+    public void createPlace(Place place, User user, Map<String, RequestBody> filesMap,  DefaultCallback<String> callback) {
         client.performRequest(
                 client.getRemoteApi().createPlace(
                         user.getToken(),
@@ -42,7 +44,9 @@ public class RemoteActions {
                         place.getPlaceDesc(),
                         place.getLatitude(),
                         place.getLongitude(),
-                        place.getAddress()),
+                        place.getAddress(),
+                        filesMap),
+
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
                         callback.onError(response.getCode());
