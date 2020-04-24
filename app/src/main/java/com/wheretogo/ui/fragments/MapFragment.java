@@ -189,12 +189,14 @@ public class MapFragment extends Fragment{
                             new DefaultCallback<List<Place>>() {
                                 @Override
                                 public void onSuccess(List<Place> data) {
+                                    if (getActivity() != null){
                                     getActivity().runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
                                             showPlaces(map, data);
                                         }
                                     });
+                                    }
                                 }
 
                                 @Override
