@@ -33,4 +33,13 @@ public class PreferenceManager {
         String lastName = sh.getString(USER_LAST_NAME, "");
         return new User(firstName, lastName, id, token);
     }
+
+    public void saveUser(User user) {
+        context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE).edit()
+                .putInt(USER_CLIENT_ID, user.getClientId())
+                .putString(USER_TOKEN, user.getToken())
+                .putString(USER_FIRST_NAME, user.getFirstName())
+                .putString(USER_LAST_NAME, user.getLastName())
+                .apply();
+    }
 }

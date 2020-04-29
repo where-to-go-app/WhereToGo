@@ -1,5 +1,8 @@
 package com.wheretogo.models;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class User {
     private String firstName;
     private String lastName;
@@ -11,6 +14,18 @@ public class User {
         this.lastName = lastName;
         this.clientId = clientId;
         this.token = token;
+    }
+
+    public User() {
+
+    }
+
+    public static User parse(JSONObject jsonObject) throws JSONException {
+        User user = new User();
+        user.setClientId(jsonObject.getInt("id"));
+        user.setFirstName(jsonObject.getString("first_name"));
+        user.setLastName(jsonObject.getString("last_name"));
+        return user;
     }
 
     public void setFirstName(String firstName) {

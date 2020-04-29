@@ -1,13 +1,12 @@
 package com.wheretogo.ui.fragments;
 
 import android.Manifest;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -15,258 +14,178 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.wheretogo.R;
-import com.wheretogo.models.NewPlacePhoto;
-import com.wheretogo.ui.adapters.NewPlacePhotosAdapter;
-import com.wheretogo.ui.custom.CustomMapView;
+import com.wheretogo.data.local.PreferenceManager;
+import com.wheretogo.data.remote.DefaultCallback;
+import com.wheretogo.data.remote.RemoteActions;
+import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.models.Place;
+import com.wheretogo.models.User;
 import com.yandex.mapkit.MapKitFactory;
+import com.yandex.mapkit.mapview.MapView;
 
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
 
 import static android.app.Activity.RESULT_OK;
 
-public class CreateFragment extends Fragment {
-    private EditText placeName;
-    private EditText placeDescription;
-    private CustomMapView createMapView;
-    private Button addPhotoButton;
+public class CreateFragment extends Fragment implements View.OnClickListener {
+    private MapView createMapView;
+    private ViewGroup panelRoot;
+    private TextView panelTitle;
+    private ImageView mapPin;
+
+    private EditText placeNameEdit;
+    private EditText placeDescriptionEdit;
+    private ImageView placeImage;
     private Button submitButton;
-    private TextView errorText;
 
-    private RecyclerView photosList;
-    private NewPlacePhotosAdapter photosAdapter;
-
-    private ArrayList<NewPlacePhoto> placePhotos;
-
+    private RemoteActions remoteActions;
 
     private static final int REQUEST_CAMERA = 1;
-    private static final int REQUEST_GALLERY = 2;
+    private static final int REQUEST_STORAGE = 2;
+    private static final int PERMISSION_CAMERA = 3;
 
-    private static final int READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE = 10;
-    private static final int READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE = 11;
-    private static final int CAMERA_PERMISSION_REQUEST_CODE = 12;
-
-    private static final int YES_GALLERY = 101;
-    private static final int YES_GALLERY_AND_CAMERA = 102;
-    private static final int YES_CAMERA = 103;
-    private static final int NO_GALLERY_AND_CAMERA = 100;
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        remoteActions = new RemoteActions(new RemoteClient());
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_create, container, false);
+        View root = inflater.inflate(R.layout.fragment_map, container, false);
         findViews(root);
-        createBinds();
+        inflater.inflate(R.layout.layout_create, panelRoot, true);
+        placeNameEdit = root.findViewById(R.id.create_name_edit);
+        placeDescriptionEdit = root.findViewById(R.id.create_desc_edit);
+        placeImage = root.findViewById(R.id.create_image);
+        placeImage.setOnClickListener(this);
+        submitButton = root.findViewById(R.id.create_apply_button);
+        submitButton.setOnClickListener(this);
         return root;
     }
 
     private void findViews(View root) {
-        createMapView = root.findViewById(R.id.createMapView);
-        placeName = root.findViewById(R.id.newPlaceName);
-        placeDescription = root.findViewById(R.id.newPlaceDescription);
-        addPhotoButton = root.findViewById(R.id.addPhoto_button);
-        errorText = root.findViewById(R.id.error_text);
-        submitButton = root.findViewById(R.id.createPlace_submit);
-        photosList = root.findViewById(R.id.newPlacePhotos);
-        placePhotos = new ArrayList<NewPlacePhoto>();
-        photosAdapter = new NewPlacePhotosAdapter(placePhotos);
-        photosList.setAdapter(photosAdapter);
-        photosList.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.HORIZONTAL, false));
-
-    }
-
-    private void createBinds(){
-        addPhotoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                askPhotoPermission();
-                photosAdapter.notifyDataSetChanged();
-            }
-
-        });
-        // TODO при каждом изменении карты получать адрес центра карты. (нужен геокодер и ретрофит)
-        submitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (placeName.getText().length() == 0) {
-
-                    errorText.setText("Название места не должно быть пустым");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                if (placeName.getText().length() > 255) {
-                    errorText.setText("Название места не должно превышать 255 символов");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                if (placeDescription.getText().length() == 0) {
-                    errorText.setText("Описание места не должно быть пустым");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                if (placeDescription.getText().length() > 1023) {
-                    errorText.setText("Название места не должно превышать 1023 символов");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                if (placePhotos.size() == 0){
-                    errorText.setText("Добавьте хотя бы одну фотографию");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                boolean isThereMainPhoto = false;
-                for (NewPlacePhoto ph: placePhotos
-                     ) {
-                    if (ph.isMain()){
-                        isThereMainPhoto = true;
-                        break;
-                    }
-                }
-                if (!isThereMainPhoto){
-                    errorText.setText("Сделайте хотя бы одну фотографию главной");
-                    errorText.setVisibility(View.VISIBLE);
-                    return;
-                }
-                errorText.setVisibility(View.GONE);
-                // TODO сделать вызов create_place
-            }
-        });
-    }
-
-    private void askPhotoPermission() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED) {
-            startDialog(YES_GALLERY_AND_CAMERA);
-        } else if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED){
-            requestPermissions(
-                    new String[]{Manifest.permission.CAMERA},
-                    CAMERA_PERMISSION_REQUEST_CODE);
-        }else if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
-                == PackageManager.PERMISSION_GRANTED){
-            requestPermissions(
-                new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-            READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE);
-        }
-        else{
-            System.out.println("4");
-            requestPermissions(
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.CAMERA},
-                    READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE);
-        }
+        createMapView = root.findViewById(R.id.mapView);
+        panelRoot = root.findViewById(R.id.panelRoot);
+        mapPin = root.findViewById(R.id.mapPin);
+        panelTitle = root.findViewById(R.id.panelTitle);
+        panelTitle.setText("55.899622, 37.210925"); // TODO
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == READ_EXTERNAL_STORAGES_AND_CAMERA_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length==2){
-                System.out.println(Arrays.toString(grantResults));
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    startDialog(YES_GALLERY_AND_CAMERA);
+        if (requestCode == PERMISSION_CAMERA) {
+            for (int i = 0; i < permissions.length; i++) {
+                String p = permissions[i];
+                if (p.equals(Manifest.permission.CAMERA) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    openCamera();
+                    break;
                 }
-                else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startDialog(YES_GALLERY);
-                }
-                else if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    startDialog(YES_GALLERY);
-                }else{
-                    startDialog(NO_GALLERY_AND_CAMERA);
-                }
-            }
-        }else if (requestCode == CAMERA_PERMISSION_REQUEST_CODE){
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                startDialog(YES_GALLERY_AND_CAMERA);
-            }else{
-                startDialog(YES_GALLERY);
-            }
-        }else if (requestCode == READ_EXTERNAL_STORAGES_PERMISSION_REQUEST_CODE){
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                startDialog(YES_GALLERY_AND_CAMERA);
-            }else{
-                startDialog(YES_CAMERA);
             }
         }
     }
-    private void startDialog(int type) {
-        AlertDialog.Builder myAlertDialog = new AlertDialog.Builder(
-                getActivity());
-        myAlertDialog.setTitle("Загрузка фотогравфии");
-        myAlertDialog.setMessage("Как вы хотите загрузить изображение?");
-        if (type == YES_GALLERY || type == YES_GALLERY_AND_CAMERA) {
-            myAlertDialog.setPositiveButton("Gallery",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface arg0, int arg1) {
-                            Intent pictureActionIntent = null;
 
-                            pictureActionIntent = new Intent(
-                                    Intent.ACTION_PICK,
-                                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                            startActivityForResult(
-                                    pictureActionIntent,
-                                    REQUEST_GALLERY);
+    private void showDialog() {
+        Dialog dialog = new Dialog(getContext());
+        dialog.setContentView(R.layout.layout_create_dialog);
+        ViewGroup dialogCamera = dialog.findViewById(R.id.dialog_camera);
+        dialogCamera.setOnClickListener(v -> {
+            openCamera();
+            dialog.dismiss();
+        });
+        ViewGroup dialogStorage = dialog.findViewById(R.id.dialog_storage);
+        dialogStorage.setOnClickListener(v -> {
+            openFilePicker();
+            dialog.dismiss();
+        });
+        dialog.show();
+    }
 
-                        }
-                    });
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[] {Manifest.permission.CAMERA}, PERMISSION_CAMERA);
+            return;
         }
-        if (type == YES_CAMERA || type == YES_GALLERY_AND_CAMERA) {
-        myAlertDialog.setNegativeButton("Camera",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface arg0, int arg1) {
-
-                        Intent intent = new Intent(
-                                MediaStore.ACTION_IMAGE_CAPTURE);
-                        startActivityForResult(intent,
-                                REQUEST_CAMERA);
-
-                    }
-                });
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
+            startActivityForResult(takePictureIntent, REQUEST_CAMERA);
+        } else {
+            Toast.makeText(getContext(), "Error has occured", Toast.LENGTH_SHORT).show();
         }
-        myAlertDialog.show();
+    }
+
+    private void openFilePicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        startActivityForResult(intent, REQUEST_STORAGE);
+    }
+
+    private void createPlace() {
+        String placeName = placeNameEdit.getText().toString().trim();
+        if (placeName.isEmpty()) {
+            Toast.makeText(getContext(), "Empty name edit", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String placeDesc = placeDescriptionEdit.getText().toString().trim();
+        if (placeDesc.isEmpty()) {
+            Toast.makeText(getContext(), "Desc is empty", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Drawable drawable = placeImage.getDrawable();
+        if (!(drawable instanceof BitmapDrawable)) {
+            Toast.makeText(getContext(), "Необходимо установить фото", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] photo = stream.toByteArray();
+        User user = new PreferenceManager(getContext()).getUser();
+        Place place = new Place(1, "Manitoba", "Cool", 1.65f, 2.43f, "Canada", "Groove Streat, 1");
+        remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean data) {
+                if (data) {
+                    // Место успешно сохранено
+                    Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Сервер вернул ошибку. Например CODE_AUTH_ERROR
+                    Toast.makeText(getContext(), "failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(int error) {
+                // Произошла ошибка при попытке обратиться к серверу
+                Toast.makeText(getContext(), "error", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case REQUEST_CAMERA:
-
-                if (data != null) {
-                    Bitmap photo = (Bitmap) data.getExtras().get("data");
-                    placePhotos.add(new NewPlacePhoto(photo));
-                    photosAdapter.notifyDataSetChanged();
-                    break;
-                    }
-
-            case REQUEST_GALLERY:
-                if (resultCode == RESULT_OK) {
-                    final Uri imageUri = data.getData();
-                    try {
-                        placePhotos.add(new NewPlacePhoto(decodeUriAndResize(imageUri)));
-                        photosAdapter.notifyDataSetChanged();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
-
-                }
-                break;
+        if (resultCode == RESULT_OK) {
+            if ((requestCode == REQUEST_CAMERA || requestCode == REQUEST_STORAGE) && data.getData() != null) {
+                placeImage.setImageURI(data.getData());
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
-        super.onActivityResult(requestCode, resultCode, data);
     }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -281,28 +200,17 @@ public class CreateFragment extends Fragment {
         MapKitFactory.getInstance().onStop();
     }
 
-    private Bitmap decodeUriAndResize(Uri selectedImage) throws FileNotFoundException {
-        BitmapFactory.Options op = new BitmapFactory.Options();
-        op.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(
-                getActivity().getContentResolver().openInputStream(selectedImage), null, op);
-
-        final int REQUIRED_SIZE = 1000;
-
-        int width_tmp = op.outWidth, height_tmp = op.outHeight;
-        int scale = 1;
-        while (true) {
-            if (width_tmp / 2 < REQUIRED_SIZE || height_tmp / 2 < REQUIRED_SIZE) {
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.create_image: {
+                showDialog();
                 break;
             }
-            width_tmp /= 2;
-            height_tmp /= 2;
-            scale *= 2;
+            case R.id.create_apply_button: {
+                createPlace();
+                break;
+            }
         }
-
-        BitmapFactory.Options op2 = new BitmapFactory.Options();
-        op2.inSampleSize = scale;
-        return BitmapFactory.decodeStream(
-                getActivity().getContentResolver().openInputStream(selectedImage), null, op2);
     }
 }

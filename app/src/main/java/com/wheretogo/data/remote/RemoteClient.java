@@ -1,5 +1,7 @@
 package com.wheretogo.data.remote;
 
+import android.os.Handler;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.wheretogo.data.remote.responses.DefaultResponse;
@@ -16,11 +18,13 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RemoteClient {
-    private static final String REMOTE_URL = "";
+    private static final String REMOTE_URL = "http://valer14356.pythonanywhere.com";
     private RemoteApi remoteApi;
     private Executor executor = Executors.newSingleThreadExecutor();
+    private Handler handler;
 
     public RemoteClient() {
+        handler = new Handler();
         OkHttpClient okClient = new OkHttpClient.Builder()
                 .readTimeout(60, TimeUnit.SECONDS)
                 .connectTimeout(60, TimeUnit.SECONDS)
@@ -43,14 +47,18 @@ public class RemoteClient {
             try {
                 Response<T> response = call.execute();
                 if (response.isSuccessful()) {
-                    req.onResult(response.body());
+                    handleResponse(req, response.body());
                 } else {
-                    req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
+                    handleResponse(req, (T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
                 }
             } catch (IOException e) {
-                req.onResult((T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
+                handleResponse(req, (T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
             }
         });
+    }
+
+    private <T extends DefaultResponse> void handleResponse(final Request<T> req, T response) {
+        handler.post(() -> req.onResult(response));
     }
 
     public interface Request<T extends DefaultResponse> {

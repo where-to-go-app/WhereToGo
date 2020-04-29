@@ -19,5 +19,12 @@
         android:layout_marginBottom="@dimen/bottom_sheet_min_height"
         android:background="@drawable/ic_arrow_up" />
 
+    <ImageView
+        android:id="@+id/mapPin"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        app:srcCompat="@drawable/map_pin" />
+
     <include layout="@layout/bottom_panel"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

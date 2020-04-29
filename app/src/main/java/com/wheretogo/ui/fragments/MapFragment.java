@@ -55,6 +55,7 @@ import java.util.HashMap;
 public class MapFragment extends Fragment{
 
     private MapView mapView;
+    private ImageView mapPin;
     private ImageButton imageButton;
     private LinearLayout panelRoot;
     private TextView panelTitle;
@@ -90,7 +91,7 @@ public class MapFragment extends Fragment{
         preferenceManager = new PreferenceManager(getContext());
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
-        placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.place_point);
+        placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.map_pin);
     }
 
     @Nullable
@@ -98,6 +99,7 @@ public class MapFragment extends Fragment{
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_map, container, false);
         findViews(root);
+        mapPin.setVisibility(View.GONE);
         panelBehavior = BottomSheetBehavior.from(panelRoot);
         panelBehavior.addBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
@@ -115,6 +117,7 @@ public class MapFragment extends Fragment{
 
     private void findViews(View root) {
         mapView = root.findViewById(R.id.mapView);
+        mapPin = root.findViewById(R.id.mapPin);
         imageButton = root.findViewById(R.id.geolocation_button);
         panelRoot = root.findViewById(R.id.panelRoot);
         panelTitle = root.findViewById(R.id.panelTitle);

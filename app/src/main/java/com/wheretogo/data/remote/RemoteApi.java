@@ -4,11 +4,18 @@ import com.wheretogo.data.remote.responses.DefaultResponse;
 import com.wheretogo.data.remote.responses.PlaceResponse;
 import com.wheretogo.data.remote.responses.PlacesResponse;
 
+import java.util.Map;
+
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
+import retrofit2.http.PartMap;
 import retrofit2.http.Query;
 
 public interface RemoteApi {
@@ -16,21 +23,17 @@ public interface RemoteApi {
     @FormUrlEncoded
     @POST("/api/users/auth")
     Call<DefaultResponse> authUser(
-            @Field("secret_string") String secretString,
+            @Field("auth_secret_string") String secretString,
             @Field("client_id") Integer clientId,
             @Field("first_name") String firstName,
             @Field("last_name") String lastName
     );
 
-    @FormUrlEncoded
+    @Multipart
     @POST("/api/places/create")
     Call<DefaultResponse> createPlace(
-            @Field("user_token") String userToken,
-            @Field("place_name") String placeName,
-            @Field("place_desc") String placeDesc,
-            @Field("latitude") float latitude,
-            @Field("longitude") float longitude,
-            @Field("address") String address
+            @Part MultipartBody.Part photo,
+            @PartMap Map<String, RequestBody> params
     );
 
     @FormUrlEncoded
