@@ -28,10 +28,22 @@ import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.data.remote.geocoder.GeocoderRemoteActions;
+import com.wheretogo.data.remote.geocoder.GeocoderRemoteClient;
 import com.wheretogo.models.Place;
 import com.wheretogo.models.User;
+import com.wheretogo.models.geocoderModel.Country;
+import com.wheretogo.models.geocoderModel.GeocodeModel;
 import com.yandex.mapkit.MapKitFactory;
+import com.yandex.mapkit.geometry.Point;
+import com.yandex.mapkit.map.CameraListener;
+import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.CameraUpdateSource;
+import com.yandex.mapkit.map.Map;
 import com.yandex.mapkit.mapview.MapView;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.io.ByteArrayOutputStream;
 
@@ -43,6 +55,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
     private TextView panelTitle;
     private ImageView mapPin;
 
+
     private EditText placeNameEdit;
     private EditText placeDescriptionEdit;
     private ImageView placeImage;
@@ -53,6 +66,10 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
     private static final int REQUEST_CAMERA = 1;
     private static final int REQUEST_STORAGE = 2;
     private static final int PERMISSION_CAMERA = 3;
+    private String country = "";
+    private String address = "";
+
+    CameraListener cameraListener;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,6 +89,49 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         placeImage.setOnClickListener(this);
         submitButton = root.findViewById(R.id.create_apply_button);
         submitButton.setOnClickListener(this);
+        cameraListener = new CameraListener() {
+            @Override
+            public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
+                if (b) {
+                    Point point = map.getCameraPosition().getTarget();
+                    String geocode = point.getLongitude() + ";" + point.getLatitude();
+                    System.out.println(geocode);
+                    GeocoderRemoteActions geocoderRemoteActions = new GeocoderRemoteActions(new GeocoderRemoteClient());
+                    geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
+                        @Override
+                        public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
+
+                            Country addressDetails = response.body().getResponse().getGeoObjectCollection()
+                                    .getFeatureMember()
+                                    .get(0)
+                                    .getGeoObject()
+                                    .getMetaDataProperty()
+                                    .getGeocoderMetaData()
+                                    .getAddressDetails()
+                                    .getCountry();
+                            address = addressDetails.getAddressLine();
+                            if (addressDetails.getCountryName() != null) {
+                                country = addressDetails.getCountryName();
+                            }
+                            if (addressDetails.getAdministrativeArea() != null && addressDetails.getAdministrativeArea().getLocality() != null) {
+                                String province = addressDetails
+                                        .getAdministrativeArea()
+                                        .getLocality()
+                                        .getLocalityName();
+                            }
+
+                            panelTitle.setText(address);
+                        }
+
+                        @Override
+                        public void onFailure(Call<GeocodeModel> call, Throwable throwable) {
+                            panelTitle.setText("Не получилось отправить запрос. Проверьте подключение к интернету");
+                        }
+                    });
+                }
+            }
+        };
+        createMapView.getMap().addCameraListener(cameraListener);
         return root;
     }
 
@@ -80,7 +140,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         panelRoot = root.findViewById(R.id.panelRoot);
         mapPin = root.findViewById(R.id.mapPin);
         panelTitle = root.findViewById(R.id.panelTitle);
-        panelTitle.setText("55.899622, 37.210925"); // TODO
+        panelTitle.setText("Адрес:"); // TODO
     }
 
     @Override
@@ -149,21 +209,24 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
             Toast.makeText(getContext(), "Необходимо установить фото", Toast.LENGTH_SHORT).show();
             return;
         }
+        Point pt= createMapView.getMap().getCameraPosition().getTarget();
         Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] photo = stream.toByteArray();
         User user = new PreferenceManager(getContext()).getUser();
-        Place place = new Place(1, placeName, placeDesc, 1.65f, 2.43f, "Canada", "Groove Streat, 1");
+        Place place = new Place( placeName, placeDesc, new Float(pt.getLatitude()), new Float(pt.getLongitude()), country, address);
         remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean data) {
                 if (data) {
                     // Место успешно сохранено
-                    Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
+                    if (getContext() != null)
+                        Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
                 } else {
                     // Сервер вернул ошибку. Например CODE_AUTH_ERROR
-                    Toast.makeText(getContext(), "failed", Toast.LENGTH_SHORT).show();
+                    if (getContext() != null)
+                        Toast.makeText(getContext(), "failed", Toast.LENGTH_SHORT).show();
                 }
             }
 

@@ -2,25 +2,15 @@ package com.wheretogo.models;
 
 public class Place {
     private int id;
-    private String placeName;
+    private String place_name;
     private String placeDesc;
     private float latitude;
     private float longitude;
     private String country;
     private String address;
 
-    public Place(int id, String placeName, String placeDesc, float latitude, float longitude, String country, String address) {
-        this.id = id;
-        this.placeName = placeName;
-        this.placeDesc = placeDesc;
-        this.latitude = latitude;
-        this.longitude = longitude;
-        this.country = country;
-        this.address = address;
-    }
-
     public Place(String placeName, String placeDesc, float latitude, float longitude, String country, String address) {
-        this.placeName = placeName;
+        this.place_name = placeName;
         this.placeDesc = placeDesc;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -33,7 +23,7 @@ public class Place {
     }
 
     public String getPlaceName() {
-        return placeName;
+        return place_name;
     }
 
     public String getPlaceDesc() {
@@ -61,7 +51,7 @@ public class Place {
     }
 
     public void setPlaceName(String placeName) {
-        this.placeName = placeName;
+        this.place_name = placeName;
     }
 
     public void setPlaceDesc(String placeDesc) {
@@ -82,5 +72,18 @@ public class Place {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    @Override
+    public String toString() {
+        return "Place{" +
+                "id=" + id +
+                ", placeName='" + place_name + '\'' +
+                ", placeDesc='" + placeDesc + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", country='" + country + '\'' +
+                ", address='" + address + '\'' +
+                '}';
     }
 }

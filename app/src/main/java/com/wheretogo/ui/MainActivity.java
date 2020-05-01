@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.vk.api.sdk.VK;
+import com.vk.api.sdk.utils.VKUtils;
 import com.wheretogo.R;
 import com.wheretogo.ui.fragments.CreateFragment;
 import com.wheretogo.ui.fragments.MapFragment;
@@ -25,6 +26,7 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
 
         if (!VK.isLoggedIn()) {
             Intent intent = new Intent(this, IntroActivity.class);
