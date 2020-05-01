@@ -80,7 +80,6 @@ public class IntroActivity extends AppCompatActivity {
 
             @Override
             public void success(User user) {
-                user.setToken(token);
                 preferenceManager.saveUser(user);
                 authUser(user);
             }
@@ -93,10 +92,11 @@ public class IntroActivity extends AppCompatActivity {
     }
 
     private void authUser(User user) {
-        remoteActions.auth(user, new DefaultCallback<Boolean>() {
+        remoteActions.auth(user, new DefaultCallback<String>() {
             @Override
-            public void onSuccess(Boolean data) {
-                if (data) {
+            public void onSuccess(String data) {
+                if (data != null) {
+                    preferenceManager.updateToken(data);
                     Intent intent = new Intent(IntroActivity.this, MainActivity.class);
                     startActivity(intent);
                     finish();

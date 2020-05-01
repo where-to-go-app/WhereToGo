@@ -19,6 +19,15 @@ public class Place {
         this.address = address;
     }
 
+    public Place(String placeName, String placeDesc, float latitude, float longitude, String country, String address) {
+        this.placeName = placeName;
+        this.placeDesc = placeDesc;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.country = country;
+        this.address = address;
+    }
+
     public int getId() {
         return id;
     }

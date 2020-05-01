@@ -154,7 +154,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] photo = stream.toByteArray();
         User user = new PreferenceManager(getContext()).getUser();
-        Place place = new Place(1, "Manitoba", "Cool", 1.65f, 2.43f, "Canada", "Groove Streat, 1");
+        Place place = new Place(1, placeName, placeDesc, 1.65f, 2.43f, "Canada", "Groove Streat, 1");
         remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean data) {

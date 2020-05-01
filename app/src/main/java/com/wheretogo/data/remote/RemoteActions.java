@@ -23,7 +23,7 @@ public class RemoteActions {
         this.client = client;
     }
 
-    public void auth(User user, DefaultCallback<Boolean> callback) {
+    public void auth(User user, DefaultCallback<String> callback) {
         if (user.getFirstName() == null) {
             throw new IllegalArgumentException();
         }
@@ -37,7 +37,7 @@ public class RemoteActions {
                         callback.onError(0);
                         return;
                     }
-                    callback.onSuccess(response.getCode() == DefaultResponse.RESPONSE_OK);
+                    callback.onSuccess(token);
                 });
     }
 
@@ -52,7 +52,7 @@ public class RemoteActions {
         map.put("address", toRequestBody(place.getAddress()));
         client.performRequest(
                 client.getRemoteApi().createPlace(
-                        MultipartBody.Part.createFormData("nameFile", "hello", RequestBody.create(MediaType.parse("image/*"), photo)),
+                        MultipartBody.Part.createFormData(place.getPlaceName(), place.getPlaceName(), RequestBody.create(MediaType.parse("image/*"), photo)),
                         map),
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
