@@ -52,6 +52,7 @@ import com.yandex.mapkit.map.PlacemarkMapObject;
 import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
+import kotlin.jvm.internal.Ref;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,10 +85,16 @@ public class MapFragment extends Fragment{
 
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
+    private List<Place> placesToAdapter;
     private ArrayList<MapMark> pointsToAddOnMap;
     private ImageProvider placeMarkImg;
 
     private CameraListener cameraListener;
+    private TextView desc;
+    private TextView country;
+    private TextView address;
+    private TextView province;
+    
 
 
     @Override
@@ -100,6 +107,7 @@ public class MapFragment extends Fragment{
         preferenceManager = new PreferenceManager(getContext());
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
+        placesToAdapter = new ArrayList<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.map_pin);
     }
 
@@ -123,11 +131,13 @@ public class MapFragment extends Fragment{
             @Override
             public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
                 if (b) {
-
                     VisibleRegion mapVisibleRegion = map.getVisibleRegion();
                     Point topLeft = mapVisibleRegion.getTopLeft();
                     Point bottomRight = mapVisibleRegion.getBottomRight();
-                    User user = new PreferenceManager(getContext()).getUser();
+//                    User user = new PreferenceManager(getContext()).getUser();
+//                    if (user == null){
+                    User user = new User("debug",  "debug", 1, "12345");
+//                    }
                     RemoteActions remoteActions = new RemoteActions(new RemoteClient());
                     System.out.println(topLeft.getLongitude()+" "+topLeft.getLatitude()+" "+
                             bottomRight.getLongitude()+" "+bottomRight.getLatitude());
@@ -155,15 +165,17 @@ public class MapFragment extends Fragment{
 
                     // переводим лист мест в обычное состояние
                     if (placesListState == LAYOUT_ITEM){
-                        inflatePanelLayout(LAYOUT_LIST, "Места рядом");
+                        inflatePanelLayout(LAYOUT_LIST, -1);
                     }
 
                 }
             }
         };
         mapView.getMap().addCameraListener(cameraListener);
+        mapView.getMap().setRotateGesturesEnabled(false);
 
-        inflatePanelLayout(LAYOUT_LIST, getString(R.string.nav_places));
+
+        inflatePanelLayout(LAYOUT_LIST, -1);
         return root;
     }
 
@@ -250,27 +262,39 @@ public class MapFragment extends Fragment{
         MapKitFactory.getInstance().onStop();
     }
 
-    private void inflatePanelLayout(int res, String title) {
-        panelTitle.setText(title);
+    private void inflatePanelLayout(int res, int id) {
         Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
         TransitionManager.go(scene, new Fade());
         if (res == LAYOUT_LIST) {
+            panelTitle.setText("Места поблизости");
             placesList = panelPlaceholder.findViewById(R.id.mapListPlaces);
             adapter = new PlacesAdapter((view) -> {
-                inflatePanelLayout(LAYOUT_ITEM, "Place Name");
-            });
+                inflatePanelLayout(LAYOUT_ITEM, Integer.parseInt(((TextView) view.findViewById(R.id.item_place_id)).getText().toString()));
+            }, placesToAdapter);
             placesList.setAdapter(adapter);
             placesList.setNestedScrollingEnabled(false);
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
             placesListState = LAYOUT_LIST;
         } else if (res == LAYOUT_ITEM){
+            Place place = findPlaceById(id);
+
+            panelTitle.setText(place.getPlaceName());
             photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
             name = panelPlaceholder.findViewById(R.id.mapItemName);
+            desc = panelPlaceholder.findViewById(R.id.mapItemDesc);
+            address = panelPlaceholder.findViewById(R.id.mapItemAddress);
+            country = panelPlaceholder.findViewById(R.id.mapItemCountry);
+            province = panelPlaceholder.findViewById(R.id.mapItemProvince);
+            name.setText(place.getPlaceName());
             placesListState = LAYOUT_ITEM;
 
         }
     }
     private void showPlaces(Map map, List<Place> data){
+        placesToAdapter.clear();
+        placesToAdapter.addAll(data);
+        System.out.println(data.size());
+        adapter.notifyDataSetChanged();
         pointsToAddOnMap.clear();
         for (Place place:data
         ) {
@@ -293,7 +317,7 @@ public class MapFragment extends Fragment{
             MapObjectTapListener onPointTabListener = new MapObjectTapListener() {
                 @Override
                 public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
-                    inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getPlace_name());
+                    inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getId());
                     return  true;
                 }
             };
@@ -301,5 +325,13 @@ public class MapFragment extends Fragment{
             placeMark.setUserData(mark);
             places.put(mark, placeMark);
         }
+    }
+    private Place findPlaceById(int id){
+        for (Place pl:placesToAdapter) {
+            if (pl.getId() == id){
+                return pl;
+            }
+        }
+        return null;
     }
 }

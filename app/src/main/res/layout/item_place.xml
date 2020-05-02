@@ -29,4 +29,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/item_place_photo"
         app:layout_constraintTop_toTopOf="@+id/item_place_photo" />
+    <TextView
+            android:id="@+id/item_place_id"
+            android:visibility="gone"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="@+id/item_place_photo"
+            app:layout_constraintStart_toEndOf="@+id/item_place_photo"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
