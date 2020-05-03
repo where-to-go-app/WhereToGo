@@ -3,13 +3,16 @@ package com.wheretogo.data.remote;
 import android.graphics.RectF;
 
 import com.wheretogo.data.remote.responses.DefaultResponse;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.CreatingPlace;
+import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.wheretogo.models.onePlace.OnePlace;
+import com.wheretogo.models.onePlace.Place;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -40,19 +43,28 @@ public class RemoteActions {
                     callback.onSuccess(token);
                 });
     }
-
-    public void createPlace(byte[] photo, Place place, User user, DefaultCallback<Boolean> callback) {
+    public void getPlaceById(User user, int id, DefaultCallback<Place> callback) {
+        client.performRequest(client.getRemoteApi().getPlaceById(id, user.getToken()),
+                response -> {
+                    if (response.getCode() != DefaultResponse.RESPONSE_OK) {
+                        callback.onError(response.getCode());
+                        return;
+                    }
+                    callback.onSuccess(response.getPlace());
+                });
+    }
+    public void createPlace(byte[] photo, CreatingPlace simplePlace, User user, DefaultCallback<Boolean> callback) {
         Map<String, RequestBody> map = new HashMap<>();
         map.put("user_token", toRequestBody(user.getToken()));
-        map.put("place_name", toRequestBody(place.getPlaceName()));
-        map.put("place_desc", toRequestBody(place.getPlaceDesc()));
-        map.put("latitude", toRequestBody(String.valueOf(place.getLatitude())));
-        map.put("longitude", toRequestBody(String.valueOf(place.getLongitude())));
-        map.put("country", toRequestBody(place.getCountry()));
-        map.put("address", toRequestBody(place.getAddress()));
+        map.put("place_name", toRequestBody(simplePlace.getPlaceName()));
+        map.put("place_desc", toRequestBody(simplePlace.getPlaceDesc()));
+        map.put("latitude", toRequestBody(String.valueOf(simplePlace.getLatitude())));
+        map.put("longitude", toRequestBody(String.valueOf(simplePlace.getLongitude())));
+        map.put("country", toRequestBody(simplePlace.getCountry()));
+        map.put("address", toRequestBody(simplePlace.getAddress()));
         client.performRequest(
                 client.getRemoteApi().createPlace(
-                        MultipartBody.Part.createFormData(place.getPlaceName(), place.getPlaceName(), RequestBody.create(MediaType.parse("image/*"), photo)),
+                        MultipartBody.Part.createFormData(simplePlace.getPlaceName(), simplePlace.getPlaceName(), RequestBody.create(MediaType.parse("image/*"), photo)),
                         map),
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
@@ -67,14 +79,14 @@ public class RemoteActions {
         return RequestBody.create(MediaType.parse("text/plain"), value);
     }
 
-    public void getPlacesAround(User user, RectF rect, DefaultCallback<List<Place>> callback) {
+    public void getPlacesAround(User user, RectF rect, DefaultCallback<List<SimplePlace>> callback) {
         client.performRequest(client.getRemoteApi().getPlacesAround(user.getToken(), rect.left, rect.top, rect.right, rect.bottom),
                 response -> {
                     if (response.getCode() != DefaultResponse.RESPONSE_OK) {
                         callback.onError(response.getCode());
                         return;
                     }
-                    callback.onSuccess(response.getPlaces());
+                    callback.onSuccess(response.getSimplePlaces());
                 });
     }
 }

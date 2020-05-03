@@ -24,16 +24,17 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.wheretogo.R;
-import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
 import com.wheretogo.data.remote.geocoder.GeocoderRemoteActions;
 import com.wheretogo.data.remote.geocoder.GeocoderRemoteClient;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.CreatingPlace;
+import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
 import com.wheretogo.models.geocoderModel.Country;
 import com.wheretogo.models.geocoderModel.GeocodeModel;
+import com.wheretogo.models.onePlace.Place;
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.map.CameraListener;
@@ -68,8 +69,10 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
     private static final int PERMISSION_CAMERA = 3;
     private String country = "";
     private String address = "";
+    private String province = "";
 
     CameraListener cameraListener;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -114,7 +117,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
                                 country = addressDetails.getCountryName();
                             }
                             if (addressDetails.getAdministrativeArea() != null && addressDetails.getAdministrativeArea().getLocality() != null) {
-                                String province = addressDetails
+                                province = addressDetails
                                         .getAdministrativeArea()
                                         .getLocality()
                                         .getLocalityName();
@@ -218,7 +221,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
 //        if (user == null){
         User user = new User("debug",  "debug", 1, "12345");
 //        }
-        Place place = new Place( placeName, placeDesc, new Float(pt.getLatitude()), new Float(pt.getLongitude()), country, address);
+        CreatingPlace place = new CreatingPlace(placeName, placeDesc, new Float(pt.getLatitude()), new Float(pt.getLongitude()), country, address, province);
         remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean data) {

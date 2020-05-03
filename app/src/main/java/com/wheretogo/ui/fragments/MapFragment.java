@@ -31,9 +31,12 @@ import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.data.remote.responses.PlaceResponse;
 import com.wheretogo.models.MapMark;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
+import com.wheretogo.models.onePlace.OnePlace;
+import com.wheretogo.models.onePlace.Place;
 import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKit;
@@ -52,7 +55,6 @@ import com.yandex.mapkit.map.PlacemarkMapObject;
 import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
-import kotlin.jvm.internal.Ref;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +87,7 @@ public class MapFragment extends Fragment{
 
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
-    private List<Place> placesToAdapter;
+    private List<SimplePlace> placesToAdapter;
     private ArrayList<MapMark> pointsToAddOnMap;
     private ImageProvider placeMarkImg;
 
@@ -144,9 +146,9 @@ public class MapFragment extends Fragment{
                     remoteActions.getPlacesAround(user,
                             new RectF(new Float(topLeft.getLongitude()), new Float(topLeft.getLatitude()),
                                     new Float(bottomRight.getLongitude()), new Float(bottomRight.getLatitude())),
-                            new DefaultCallback<List<Place>>() {
+                            new DefaultCallback<List<SimplePlace>>() {
                                 @Override
-                                public void onSuccess(List<Place> data) {
+                                public void onSuccess(List<SimplePlace> data) {
                                     if (getActivity() != null){
                                         getActivity().runOnUiThread(new Runnable() {
                                             @Override
@@ -276,34 +278,68 @@ public class MapFragment extends Fragment{
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
             placesListState = LAYOUT_LIST;
         } else if (res == LAYOUT_ITEM){
-            Place place = findPlaceById(id);
+            SimplePlace simplePlace = findPlaceById(id);
 
-            panelTitle.setText(place.getPlaceName());
+            panelTitle.setText(simplePlace.getPlaceName());
             photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
             name = panelPlaceholder.findViewById(R.id.mapItemName);
             desc = panelPlaceholder.findViewById(R.id.mapItemDesc);
             address = panelPlaceholder.findViewById(R.id.mapItemAddress);
             country = panelPlaceholder.findViewById(R.id.mapItemCountry);
             province = panelPlaceholder.findViewById(R.id.mapItemProvince);
-            name.setText(place.getPlaceName());
+            setPlaceInfo(id);
             placesListState = LAYOUT_ITEM;
 
         }
     }
-    private void showPlaces(Map map, List<Place> data){
+
+    private void setPlaceInfo(int id) {
+        RemoteActions remoteActions = new RemoteActions(new RemoteClient());
+        //                    User user = new PreferenceManager(getContext()).getUser();
+//                    if (user == null){
+        User user = new User("debug",  "debug", 1, "12345");
+//                    }
+        remoteActions.getPlaceById(user, id,
+                new DefaultCallback<Place>() {
+                    @Override
+                    public void onSuccess(Place place) {
+                        System.out.println(place);
+                        if (getActivity() != null){
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    name.setText(place.getPlaceName());
+                                    desc.setText(place.getPlaceDesc());
+                                    address.setText(place.getAddress());
+                                    country.setText(place.getCountry());
+                                    //province.setText(place.getPr);
+
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(int error) {
+
+                    }
+                });
+    }
+
+    private void showPlaces(Map map, List<SimplePlace> data){
         placesToAdapter.clear();
         placesToAdapter.addAll(data);
         System.out.println(data.size());
         adapter.notifyDataSetChanged();
         pointsToAddOnMap.clear();
-        for (Place place:data
+        for (SimplePlace simplePlace :data
         ) {
-            Point pt = new Point(place.getLatitude(), place.getLongitude());
-            System.out.println(place);
+            Point pt = new Point(simplePlace.getLatitude(), simplePlace.getLongitude());
+            System.out.println(simplePlace);
             MapMark mark = new MapMark(pt,
-                    place.getId(),
+                    simplePlace.getId(),
                     MapMark.PLACES_TO_SHOW,
-                    place.getPlaceName()); // создаем объект, который мы привязываем к точке на карте
+                    simplePlace.getPlaceName()); // создаем объект, который мы привязываем к точке на карте
             pointsToAddOnMap.add(mark);
         }
         for (MapMark place :places.keySet()){
@@ -326,8 +362,8 @@ public class MapFragment extends Fragment{
             places.put(mark, placeMark);
         }
     }
-    private Place findPlaceById(int id){
-        for (Place pl:placesToAdapter) {
+    private SimplePlace findPlaceById(int id){
+        for (SimplePlace pl:placesToAdapter) {
             if (pl.getId() == id){
                 return pl;
             }

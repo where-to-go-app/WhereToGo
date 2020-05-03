@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wheretogo.R;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.SimplePlace;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.Collections;
@@ -17,11 +17,11 @@ import java.util.List;
 
 public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewHolder> {
     private View.OnClickListener onItemClickCallback;
-    private List<Place> places = Collections.emptyList();
+    private List<SimplePlace> simplePlaces = Collections.emptyList();
 
-    public PlacesAdapter(View.OnClickListener onItemClickCallback, List<Place> places) {
+    public PlacesAdapter(View.OnClickListener onItemClickCallback, List<SimplePlace> simplePlaces) {
         this.onItemClickCallback = onItemClickCallback;
-        this.places = places;
+        this.simplePlaces = simplePlaces;
     }
 
     @NonNull
@@ -33,16 +33,16 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
 
     @Override
     public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
-        holder.placeName.setText(places.get(position).getPlaceName());
-        holder.setPlace(places.get(position));
+        holder.placeName.setText(simplePlaces.get(position).getPlaceName());
+        holder.setSimplePlace(simplePlaces.get(position));
 
         //holder.circleImageView.setImageBitmap(); TODO
     }
 
     @Override
     public int getItemCount() {
-        System.out.println(places);
-        return places.size();
+        System.out.println(simplePlaces);
+        return simplePlaces.size();
     }
 
 
@@ -50,7 +50,7 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
         private final CircleImageView circleImageView;
         private final TextView placeName;
         private final TextView placeId;
-        private Place place;
+        private SimplePlace simplePlace;
 
         PlaceViewHolder(View view) {
             super(view);
@@ -60,13 +60,13 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
             placeId = view.findViewById(R.id.item_place_id);
         }
 
-        public Place getPlace() {
-            return place;
+        public SimplePlace getSimplePlace() {
+            return simplePlace;
         }
 
-        public void setPlace(Place place) {
-            this.place = place;
-            placeId.setText(String.valueOf(place.getId()));
+        public void setSimplePlace(SimplePlace simplePlace) {
+            this.simplePlace = simplePlace;
+            placeId.setText(String.valueOf(simplePlace.getId()));
         }
     }
 }

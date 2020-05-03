@@ -1,7 +1,9 @@
 package com.wheretogo.data.remote.responses;
 
 import com.google.gson.annotations.SerializedName;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.SimplePlace;
+import com.wheretogo.models.onePlace.OnePlace;
+import com.wheretogo.models.onePlace.Place;
 
 public class PlaceResponse extends DefaultResponse {
     @SerializedName("place")
