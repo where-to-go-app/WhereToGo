@@ -15,6 +15,9 @@ public class Photo {
     @SerializedName("photo_url")
     @Expose
     private String photoUrl;
+    @SerializedName("is_main")
+    @Expose
+    private boolean isMain;
 
     public Integer getId() {
         return id;
@@ -40,4 +43,7 @@ public class Photo {
         this.photoUrl = photoUrl;
     }
 
+    public boolean isMain() {
+        return isMain;
+    }
 }

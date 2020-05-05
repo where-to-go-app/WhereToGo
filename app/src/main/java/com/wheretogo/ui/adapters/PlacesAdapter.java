@@ -9,7 +9,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.wheretogo.R;
+import com.wheretogo.asyncTasks.DownloadImageTask;
 import com.wheretogo.models.SimplePlace;
+import com.wheretogo.models.onePlace.Photo;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.Collections;
@@ -35,13 +37,14 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
     public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
         holder.placeName.setText(simplePlaces.get(position).getPlaceName());
         holder.setSimplePlace(simplePlaces.get(position));
+        DownloadImageTask downloadImageTask = new DownloadImageTask(holder.circleImageView);
+        downloadImageTask.execute(holder.simplePlace.getAvatar_url());
 
         //holder.circleImageView.setImageBitmap(); TODO
     }
 
     @Override
     public int getItemCount() {
-        System.out.println(simplePlaces);
         return simplePlaces.size();
     }
 
@@ -58,6 +61,7 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
             circleImageView = view.findViewById(R.id.item_place_photo);
             placeName = view.findViewById(R.id.item_place_name);
             placeId = view.findViewById(R.id.item_place_id);
+
         }
 
         public SimplePlace getSimplePlace() {

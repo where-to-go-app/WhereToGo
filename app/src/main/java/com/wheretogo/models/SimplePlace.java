@@ -1,15 +1,22 @@
 package com.wheretogo.models;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 public class SimplePlace {
     private int id;
     private String place_name;
+    @SerializedName("avatar_url")
+    @Expose
+    private String avatar_url;
     private float latitude;
     private float longitude;
 
-    public SimplePlace(String placeName, float latitude, float longitude) {
+    public SimplePlace(String placeName, float latitude, float longitude, String avatar_url) {
         this.place_name = placeName;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.avatar_url = avatar_url;
 
     }
 
@@ -33,16 +40,22 @@ public class SimplePlace {
         this.id = id;
     }
 
-
+    public String getPlace_name() {
+        return place_name;
+    }
 
     @Override
     public String toString() {
-        return "Place{" +
+        return "SimplePlace{" +
                 "id=" + id +
-                ", placeName='" + place_name + '\'' +
+                ", place_name='" + place_name + '\'' +
+                ", avatar_url='" + avatar_url + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
-
                 '}';
+    }
+
+    public String getAvatar_url() {
+        return avatar_url;
     }
 }

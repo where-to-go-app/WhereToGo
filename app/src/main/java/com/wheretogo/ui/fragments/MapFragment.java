@@ -2,17 +2,15 @@ package com.wheretogo.ui.fragments;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +24,7 @@ import androidx.transition.TransitionManager;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.wheretogo.R;
+import com.wheretogo.asyncTasks.DownloadImageTask;
 import com.wheretogo.data.BuildVars;
 import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
@@ -36,6 +35,7 @@ import com.wheretogo.models.MapMark;
 import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
 import com.wheretogo.models.onePlace.OnePlace;
+import com.wheretogo.models.onePlace.Photo;
 import com.wheretogo.models.onePlace.Place;
 import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.yandex.mapkit.Animation;
@@ -56,10 +56,13 @@ import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 
 public class MapFragment extends Fragment{
@@ -96,6 +99,7 @@ public class MapFragment extends Fragment{
     private TextView country;
     private TextView address;
     private TextView province;
+
     
 
 
@@ -111,6 +115,8 @@ public class MapFragment extends Fragment{
         places = new HashMap<>();
         placesToAdapter = new ArrayList<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.map_pin);
+
+
     }
 
     @Nullable
@@ -141,8 +147,7 @@ public class MapFragment extends Fragment{
                     User user = new User("debug",  "debug", 1, "12345");
 //                    }
                     RemoteActions remoteActions = new RemoteActions(new RemoteClient());
-                    System.out.println(topLeft.getLongitude()+" "+topLeft.getLatitude()+" "+
-                            bottomRight.getLongitude()+" "+bottomRight.getLatitude());
+
                     remoteActions.getPlacesAround(user,
                             new RectF(new Float(topLeft.getLongitude()), new Float(topLeft.getLatitude()),
                                     new Float(bottomRight.getLongitude()), new Float(bottomRight.getLatitude())),
@@ -193,7 +198,7 @@ public class MapFragment extends Fragment{
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        System.out.println(Arrays.toString(grantResults));
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeMapWithGeoLocation(); // задаем координаты юзера
@@ -303,17 +308,22 @@ public class MapFragment extends Fragment{
                 new DefaultCallback<Place>() {
                     @Override
                     public void onSuccess(Place place) {
-                        System.out.println(place);
+
                         if (getActivity() != null){
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    DownloadImageTask downloadImageTask = new DownloadImageTask(photo);
+                                    for (Photo ph:place.getPhotos()) {
+                                        if (ph.isMain()){
+                                            downloadImageTask.execute(ph.getPhotoUrl());
+                                        }
+                                    }
                                     name.setText(place.getPlaceName());
                                     desc.setText(place.getPlaceDesc());
                                     address.setText(place.getAddress());
                                     country.setText(place.getCountry());
                                     //province.setText(place.getPr);
-
                                 }
                             });
                         }
@@ -329,13 +339,14 @@ public class MapFragment extends Fragment{
     private void showPlaces(Map map, List<SimplePlace> data){
         placesToAdapter.clear();
         placesToAdapter.addAll(data);
-        System.out.println(data.size());
+
+
         adapter.notifyDataSetChanged();
         pointsToAddOnMap.clear();
         for (SimplePlace simplePlace :data
         ) {
             Point pt = new Point(simplePlace.getLatitude(), simplePlace.getLongitude());
-            System.out.println(simplePlace);
+
             MapMark mark = new MapMark(pt,
                     simplePlace.getId(),
                     MapMark.PLACES_TO_SHOW,
