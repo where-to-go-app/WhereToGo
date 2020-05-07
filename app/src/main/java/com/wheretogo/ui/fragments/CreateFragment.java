@@ -98,12 +98,10 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
                 if (b) {
                     Point point = map.getCameraPosition().getTarget();
                     String geocode = point.getLongitude() + ";" + point.getLatitude();
-                    System.out.println(geocode);
                     GeocoderRemoteActions geocoderRemoteActions = new GeocoderRemoteActions(new GeocoderRemoteClient());
                     geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
                         @Override
                         public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
-
                             Country addressDetails = response.body().getResponse().getGeoObjectCollection()
                                     .getFeatureMember()
                                     .get(0)
@@ -115,14 +113,9 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
                             address = addressDetails.getAddressLine();
                             if (addressDetails.getCountryName() != null) {
                                 country = addressDetails.getCountryName();
+                            } else {
+                                country = null;
                             }
-                            if (addressDetails.getAdministrativeArea() != null && addressDetails.getAdministrativeArea().getLocality() != null) {
-                                province = addressDetails
-                                        .getAdministrativeArea()
-                                        .getLocality()
-                                        .getLocalityName();
-                            }
-
                             panelTitle.setText(address);
                         }
 
@@ -143,6 +136,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         panelRoot = root.findViewById(R.id.panelRoot);
         mapPin = root.findViewById(R.id.mapPin);
         panelTitle = root.findViewById(R.id.panelTitle);
+        panelTitle.setTextSize(14);
         panelTitle.setText("Адрес:"); // TODO
     }
 

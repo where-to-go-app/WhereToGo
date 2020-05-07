@@ -272,6 +272,7 @@ public class MapFragment extends Fragment{
     private void inflatePanelLayout(int res, int id) {
         Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
         TransitionManager.go(scene, new Fade());
+        panelTitle.setTextSize(24);
         if (res == LAYOUT_LIST) {
             panelTitle.setText("Места поблизости");
             placesList = panelPlaceholder.findViewById(R.id.mapListPlaces);
@@ -291,7 +292,6 @@ public class MapFragment extends Fragment{
             desc = panelPlaceholder.findViewById(R.id.mapItemDesc);
             address = panelPlaceholder.findViewById(R.id.mapItemAddress);
             country = panelPlaceholder.findViewById(R.id.mapItemCountry);
-            province = panelPlaceholder.findViewById(R.id.mapItemProvince);
             setPlaceInfo(id);
             placesListState = LAYOUT_ITEM;
 
