@@ -2,17 +2,15 @@ package com.wheretogo.ui.fragments;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.*;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,14 +24,19 @@ import androidx.transition.TransitionManager;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.wheretogo.R;
+import com.wheretogo.asyncTasks.DownloadImageTask;
 import com.wheretogo.data.BuildVars;
 import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.data.remote.responses.PlaceResponse;
 import com.wheretogo.models.MapMark;
-import com.wheretogo.models.Place;
+import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
+import com.wheretogo.models.onePlace.OnePlace;
+import com.wheretogo.models.onePlace.Photo;
+import com.wheretogo.models.onePlace.Place;
 import com.wheretogo.ui.adapters.PlacesAdapter;
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKit;
@@ -44,17 +47,22 @@ import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
 import com.yandex.mapkit.map.CameraListener;
 import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.CameraUpdateSource;
 import com.yandex.mapkit.map.Map;
+import com.yandex.mapkit.map.MapObject;
 import com.yandex.mapkit.map.MapObjectTapListener;
 import com.yandex.mapkit.map.PlacemarkMapObject;
 import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 
 public class MapFragment extends Fragment{
@@ -66,10 +74,8 @@ public class MapFragment extends Fragment{
     private TextView panelTitle;
     private FrameLayout panelPlaceholder;
     private BottomSheetBehavior panelBehavior;
-    private Mode currentMode = Mode.AROUND_PLACES;
     private static final int LAYOUT_LIST = R.layout.layout_map_list;
     private static final int LAYOUT_ITEM = R.layout.layout_map_item;
-    public static final String MODE_EXTRA = "mode_extra";
 
     // layout list
     private RecyclerView placesList;
@@ -84,10 +90,18 @@ public class MapFragment extends Fragment{
 
     private final int PERMISSION_REQUEST_CODE = 123;
     private HashMap<MapMark, PlacemarkMapObject> places;
+    private List<SimplePlace> placesToAdapter;
     private ArrayList<MapMark> pointsToAddOnMap;
     private ImageProvider placeMarkImg;
 
     private CameraListener cameraListener;
+    private TextView desc;
+    private TextView country;
+    private TextView address;
+    private TextView province;
+
+    
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -96,11 +110,13 @@ public class MapFragment extends Fragment{
         if (getActivity() != null) {
             MapKitFactory.initialize(getActivity());
         }
-
         preferenceManager = new PreferenceManager(getContext());
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
+        placesToAdapter = new ArrayList<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.map_pin);
+
+
     }
 
     @Nullable
@@ -119,45 +135,54 @@ public class MapFragment extends Fragment{
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
             }
         });
-        cameraListener  = (map, cameraPosition, cameraUpdateSource, b) -> {
-            if (b) {
-                VisibleRegion mapVisibleRegion = map.getVisibleRegion();
-                Point topLeft = mapVisibleRegion.getTopLeft();
-                Point bottomRight = mapVisibleRegion.getBottomRight();
-                User user = new PreferenceManager(getContext()).getUser();
-                RemoteActions remoteActions = new RemoteActions(new RemoteClient());
-                Log.d("some_key", topLeft.getLongitude()+" "+topLeft.getLatitude()+" "+
-                        bottomRight.getLongitude()+ " " +bottomRight.getLatitude());
-                remoteActions.getPlacesAround(user,
-                        new RectF((float) topLeft.getLongitude(), (float) topLeft.getLatitude(),
-                                (float) bottomRight.getLongitude(), (float) bottomRight.getLatitude()),
-                        new DefaultCallback<List<Place>>() {
-                            @Override
-                            public void onSuccess(List<Place> data) {
-                                if (getActivity() != null){
-                                    showPlaces(map, data);
+        cameraListener  = new CameraListener() {
+            @Override
+            public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
+                if (b) {
+                    VisibleRegion mapVisibleRegion = map.getVisibleRegion();
+                    Point topLeft = mapVisibleRegion.getTopLeft();
+                    Point bottomRight = mapVisibleRegion.getBottomRight();
+//                    User user = new PreferenceManager(getContext()).getUser();
+//                    if (user == null){
+                    User user = new User("debug",  "debug", 1, "12345");
+//                    }
+                    RemoteActions remoteActions = new RemoteActions(new RemoteClient());
+
+                    remoteActions.getPlacesAround(user,
+                            new RectF(new Float(topLeft.getLongitude()), new Float(topLeft.getLatitude()),
+                                    new Float(bottomRight.getLongitude()), new Float(bottomRight.getLatitude())),
+                            new DefaultCallback<List<SimplePlace>>() {
+                                @Override
+                                public void onSuccess(List<SimplePlace> data) {
+                                    if (getActivity() != null){
+                                        getActivity().runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                showPlaces(map, data);
+                                            }
+                                        });
+                                    }
                                 }
-                            }
 
-                            @Override
-                            public void onError(int error) {
+                                @Override
+                                public void onError(int error) {
 
-                            }
-                        });
+                                }
+                            });
 
-                // переводим лист мест в обычное состояние
-                if (placesListState == LAYOUT_ITEM){
-                    inflatePanelLayout(LAYOUT_LIST, "Места рядом");
+                    // переводим лист мест в обычное состояние
+                    if (placesListState == LAYOUT_ITEM){
+                        inflatePanelLayout(LAYOUT_LIST, -1);
+                    }
+
                 }
-
             }
         };
         mapView.getMap().addCameraListener(cameraListener);
+        mapView.getMap().setRotateGesturesEnabled(false);
 
-        if (getArguments() != null) {
-            currentMode = (Mode) getArguments().getSerializable(MODE_EXTRA);
-            openTab();
-        }
+
+        inflatePanelLayout(LAYOUT_LIST, -1);
         return root;
     }
 
@@ -173,7 +198,7 @@ public class MapFragment extends Fragment{
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        Log.d("tag", Arrays.toString(grantResults));
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeMapWithGeoLocation(); // задаем координаты юзера
@@ -244,33 +269,88 @@ public class MapFragment extends Fragment{
         MapKitFactory.getInstance().onStop();
     }
 
-    private void inflatePanelLayout(int res, String title) {
-        panelTitle.setText(title);
+    private void inflatePanelLayout(int res, int id) {
         Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
         TransitionManager.go(scene, new Fade());
+        panelTitle.setTextSize(24);
         if (res == LAYOUT_LIST) {
+            panelTitle.setText("Места поблизости");
             placesList = panelPlaceholder.findViewById(R.id.mapListPlaces);
-            adapter = new PlacesAdapter((view) -> inflatePanelLayout(LAYOUT_ITEM, "Place Name"));
+            adapter = new PlacesAdapter((view) -> {
+                inflatePanelLayout(LAYOUT_ITEM, Integer.parseInt(((TextView) view.findViewById(R.id.item_place_id)).getText().toString()));
+            }, placesToAdapter);
             placesList.setAdapter(adapter);
             placesList.setNestedScrollingEnabled(false);
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
             placesListState = LAYOUT_LIST;
-        } else if (res == LAYOUT_ITEM) {
+        } else if (res == LAYOUT_ITEM){
+            SimplePlace simplePlace = findPlaceById(id);
+
+            panelTitle.setText(simplePlace.getPlaceName());
             photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
             name = panelPlaceholder.findViewById(R.id.mapItemName);
+            desc = panelPlaceholder.findViewById(R.id.mapItemDesc);
+            address = panelPlaceholder.findViewById(R.id.mapItemAddress);
+            country = panelPlaceholder.findViewById(R.id.mapItemCountry);
+            setPlaceInfo(id);
             placesListState = LAYOUT_ITEM;
+
         }
     }
 
-    private void showPlaces(Map map, List<Place> data){
+    private void setPlaceInfo(int id) {
+        RemoteActions remoteActions = new RemoteActions(new RemoteClient());
+        //                    User user = new PreferenceManager(getContext()).getUser();
+//                    if (user == null){
+        User user = new User("debug",  "debug", 1, "12345");
+//                    }
+        remoteActions.getPlaceById(user, id,
+                new DefaultCallback<Place>() {
+                    @Override
+                    public void onSuccess(Place place) {
+
+                        if (getActivity() != null){
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    DownloadImageTask downloadImageTask = new DownloadImageTask(photo);
+                                    for (Photo ph:place.getPhotos()) {
+                                        if (ph.isMain()){
+                                            downloadImageTask.execute(ph.getPhotoUrl());
+                                        }
+                                    }
+                                    name.setText(place.getPlaceName());
+                                    desc.setText(place.getPlaceDesc());
+                                    address.setText(place.getAddress());
+                                    country.setText(place.getCountry());
+                                    //province.setText(place.getPr);
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onError(int error) {
+
+                    }
+                });
+    }
+
+    private void showPlaces(Map map, List<SimplePlace> data){
+        placesToAdapter.clear();
+        placesToAdapter.addAll(data);
+
+
+        adapter.notifyDataSetChanged();
         pointsToAddOnMap.clear();
-        for (Place place:data
+        for (SimplePlace simplePlace :data
         ) {
-            Point pt = new Point(place.getLatitude(), place.getLongitude());
+            Point pt = new Point(simplePlace.getLatitude(), simplePlace.getLongitude());
+
             MapMark mark = new MapMark(pt,
-                    place.getId(),
+                    simplePlace.getId(),
                     MapMark.PLACES_TO_SHOW,
-                    place.getPlaceName()); // создаем объект, который мы привязываем к точке на карте
+                    simplePlace.getPlaceName()); // создаем объект, который мы привязываем к точке на карте
             pointsToAddOnMap.add(mark);
         }
         for (MapMark place :places.keySet()){
@@ -281,46 +361,24 @@ public class MapFragment extends Fragment{
             PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(
                     mark.getPt(),
                     placeMarkImg);
-            MapObjectTapListener onPointTabListener = (mapObject, point) -> {
-                inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getPlace_name());
-                return  true;
+            MapObjectTapListener onPointTabListener = new MapObjectTapListener() {
+                @Override
+                public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
+                    inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getId());
+                    return  true;
+                }
             };
             placeMark.addTapListener(onPointTabListener);
             placeMark.setUserData(mark);
             places.put(mark, placeMark);
         }
     }
-
-    public Mode getCurrentMode() {
-        return currentMode;
-    }
-
-    public void setNewMode(Mode mode) {
-        currentMode = mode;
-        openTab();
-    }
-
-    private void openTab() {
-        inflatePanelLayout(LAYOUT_LIST, currentMode.title);
-        switch (currentMode) {
-            case AROUND_PLACES:
-                break;
-            case LOVE_PLACES:
-                break;
-            case SEARCH_PLACES:
-                break;
+    private SimplePlace findPlaceById(int id){
+        for (SimplePlace pl:placesToAdapter) {
+            if (pl.getId() == id){
+                return pl;
+            }
         }
-    }
-
-    public enum Mode {
-        AROUND_PLACES("Места рядом"),
-        LOVE_PLACES("Любимые места"),
-        SEARCH_PLACES("Поиск места");
-
-        String title;
-
-        Mode(String title) {
-            this.title = title;
-        }
+        return null;
     }
 }

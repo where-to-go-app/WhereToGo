@@ -20,8 +20,8 @@ public class MapMark {
         this.type = type;
         this.place_name = place_name;
     }
-    public int getType(){
-        return type;
+    public int getId(){
+        return id;
     }
 
 
