@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.vk.api.sdk.VK;
-import com.vk.api.sdk.utils.VKUtils;
 import com.wheretogo.R;
 import com.wheretogo.ui.fragments.CreateFragment;
 import com.wheretogo.ui.fragments.MapFragment;
@@ -43,24 +42,53 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
         findViews();
 
         bottomNavigation.setOnNavigationItemSelectedListener((item) -> {
-            switch (item.getItemId()) {
+            Fragment nextFragment;
+            MapFragment.Mode mapMode = null;
 
+            switch (item.getItemId()) {
                 case R.id.nav_places:
+                    mapMode = MapFragment.Mode.AROUND_PLACES;
+                    nextFragment = new MapFragment();
+                    break;
                 case R.id.nav_search:
+                    mapMode = MapFragment.Mode.SEARCH_PLACES;
+                    nextFragment = new MapFragment();
+                    break;
                 case R.id.nav_favorite: {
-                    replaceFragment(new MapFragment());
+                    mapMode = MapFragment.Mode.LOVE_PLACES;
+                    nextFragment = new MapFragment();
                     break;
                 }
                 case R.id.nav_create: {
-                    replaceFragment(new CreateFragment());
+                    nextFragment = new CreateFragment();
                     break;
                 }
                 case R.id.nav_settings: {
-                    replaceFragment(new SettingsFragment());
+                    nextFragment = new SettingsFragment();
                     break;
                 }
                 default: return false;
             }
+
+            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.placeholder);
+
+            if (nextFragment instanceof MapFragment && currentFragment instanceof MapFragment) {
+                MapFragment mapFragment = ((MapFragment) currentFragment);
+                if (mapFragment.getCurrentMode() != mapMode) {
+                    mapFragment.setNewMode(mapMode);
+                }
+                return true;
+
+            }
+            if (nextFragment instanceof MapFragment) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(MapFragment.MODE_EXTRA, mapMode);
+                nextFragment.setArguments(bundle);
+            }
+
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.placeholder, nextFragment)
+                    .commit();
             return true;
         });
 
@@ -78,15 +106,6 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
     private void findViews() {
         bottomNavigation = findViewById(R.id.bottomNavigationView);
         placeholder = findViewById(R.id.placeholder);
-    }
-
-    private void replaceFragment(Fragment fragment) {
-        if (fragment instanceof MapFragment && getSupportFragmentManager().findFragmentById(R.id.placeholder) instanceof  MapFragment) {
-            return;
-        }
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.placeholder, fragment)
-                .commit();
     }
 
     @Override

@@ -44,9 +44,7 @@ import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
 import com.yandex.mapkit.map.CameraListener;
 import com.yandex.mapkit.map.CameraPosition;
-import com.yandex.mapkit.map.CameraUpdateSource;
 import com.yandex.mapkit.map.Map;
-import com.yandex.mapkit.map.MapObject;
 import com.yandex.mapkit.map.MapObjectTapListener;
 import com.yandex.mapkit.map.PlacemarkMapObject;
 import com.yandex.mapkit.map.VisibleRegion;
@@ -68,8 +66,10 @@ public class MapFragment extends Fragment{
     private TextView panelTitle;
     private FrameLayout panelPlaceholder;
     private BottomSheetBehavior panelBehavior;
+    private Mode currentMode = Mode.AROUND_PLACES;
     private static final int LAYOUT_LIST = R.layout.layout_map_list;
     private static final int LAYOUT_ITEM = R.layout.layout_map_item;
+    public static final String MODE_EXTRA = "mode_extra";
 
     // layout list
     private RecyclerView placesList;
@@ -89,7 +89,6 @@ public class MapFragment extends Fragment{
 
     private CameraListener cameraListener;
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +96,7 @@ public class MapFragment extends Fragment{
         if (getActivity() != null) {
             MapKitFactory.initialize(getActivity());
         }
+
         preferenceManager = new PreferenceManager(getContext());
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
@@ -119,51 +119,45 @@ public class MapFragment extends Fragment{
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
             }
         });
-        cameraListener  = new CameraListener() {
-            @Override
-            public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
-                if (b) {
-
-                    VisibleRegion mapVisibleRegion = map.getVisibleRegion();
-                    Point topLeft = mapVisibleRegion.getTopLeft();
-                    Point bottomRight = mapVisibleRegion.getBottomRight();
-                    User user = new PreferenceManager(getContext()).getUser();
-                    RemoteActions remoteActions = new RemoteActions(new RemoteClient());
-                    System.out.println(topLeft.getLongitude()+" "+topLeft.getLatitude()+" "+
-                            bottomRight.getLongitude()+" "+bottomRight.getLatitude());
-                    remoteActions.getPlacesAround(user,
-                            new RectF(new Float(topLeft.getLongitude()), new Float(topLeft.getLatitude()),
-                                    new Float(bottomRight.getLongitude()), new Float(bottomRight.getLatitude())),
-                            new DefaultCallback<List<Place>>() {
-                                @Override
-                                public void onSuccess(List<Place> data) {
-                                    if (getActivity() != null){
-                                        getActivity().runOnUiThread(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                showPlaces(map, data);
-                                            }
-                                        });
-                                    }
+        cameraListener  = (map, cameraPosition, cameraUpdateSource, b) -> {
+            if (b) {
+                VisibleRegion mapVisibleRegion = map.getVisibleRegion();
+                Point topLeft = mapVisibleRegion.getTopLeft();
+                Point bottomRight = mapVisibleRegion.getBottomRight();
+                User user = new PreferenceManager(getContext()).getUser();
+                RemoteActions remoteActions = new RemoteActions(new RemoteClient());
+                Log.d("some_key", topLeft.getLongitude()+" "+topLeft.getLatitude()+" "+
+                        bottomRight.getLongitude()+ " " +bottomRight.getLatitude());
+                remoteActions.getPlacesAround(user,
+                        new RectF((float) topLeft.getLongitude(), (float) topLeft.getLatitude(),
+                                (float) bottomRight.getLongitude(), (float) bottomRight.getLatitude()),
+                        new DefaultCallback<List<Place>>() {
+                            @Override
+                            public void onSuccess(List<Place> data) {
+                                if (getActivity() != null){
+                                    showPlaces(map, data);
                                 }
+                            }
 
-                                @Override
-                                public void onError(int error) {
+                            @Override
+                            public void onError(int error) {
 
-                                }
-                            });
+                            }
+                        });
 
-                    // переводим лист мест в обычное состояние
-                    if (placesListState == LAYOUT_ITEM){
-                        inflatePanelLayout(LAYOUT_LIST, "Места рядом");
-                    }
-
+                // переводим лист мест в обычное состояние
+                if (placesListState == LAYOUT_ITEM){
+                    inflatePanelLayout(LAYOUT_LIST, "Места рядом");
                 }
+
             }
         };
         mapView.getMap().addCameraListener(cameraListener);
 
-        inflatePanelLayout(LAYOUT_LIST, getString(R.string.nav_places));
+        if (getArguments() != null) {
+            currentMode = (Mode) getArguments().getSerializable(MODE_EXTRA);
+            openTab();
+        }
         return root;
     }
 
@@ -179,7 +173,7 @@ public class MapFragment extends Fragment{
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        System.out.println(Arrays.toString(grantResults));
+        Log.d("tag", Arrays.toString(grantResults));
         if (requestCode == PERMISSION_REQUEST_CODE) {
             if (grantResults.length==1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 initializeMapWithGeoLocation(); // задаем координаты юзера
@@ -256,26 +250,23 @@ public class MapFragment extends Fragment{
         TransitionManager.go(scene, new Fade());
         if (res == LAYOUT_LIST) {
             placesList = panelPlaceholder.findViewById(R.id.mapListPlaces);
-            adapter = new PlacesAdapter((view) -> {
-                inflatePanelLayout(LAYOUT_ITEM, "Place Name");
-            });
+            adapter = new PlacesAdapter((view) -> inflatePanelLayout(LAYOUT_ITEM, "Place Name"));
             placesList.setAdapter(adapter);
             placesList.setNestedScrollingEnabled(false);
             placesList.setLayoutManager(new LinearLayoutManager(getContext()));
             placesListState = LAYOUT_LIST;
-        } else if (res == LAYOUT_ITEM){
+        } else if (res == LAYOUT_ITEM) {
             photo = panelPlaceholder.findViewById(R.id.mapItemPhoto);
             name = panelPlaceholder.findViewById(R.id.mapItemName);
             placesListState = LAYOUT_ITEM;
-
         }
     }
+
     private void showPlaces(Map map, List<Place> data){
         pointsToAddOnMap.clear();
         for (Place place:data
         ) {
             Point pt = new Point(place.getLatitude(), place.getLongitude());
-            System.out.println(place);
             MapMark mark = new MapMark(pt,
                     place.getId(),
                     MapMark.PLACES_TO_SHOW,
@@ -290,16 +281,46 @@ public class MapFragment extends Fragment{
             PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(
                     mark.getPt(),
                     placeMarkImg);
-            MapObjectTapListener onPointTabListener = new MapObjectTapListener() {
-                @Override
-                public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
-                    inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getPlace_name());
-                    return  true;
-                }
+            MapObjectTapListener onPointTabListener = (mapObject, point) -> {
+                inflatePanelLayout(LAYOUT_ITEM, ((MapMark) mapObject.getUserData()).getPlace_name());
+                return  true;
             };
             placeMark.addTapListener(onPointTabListener);
             placeMark.setUserData(mark);
             places.put(mark, placeMark);
+        }
+    }
+
+    public Mode getCurrentMode() {
+        return currentMode;
+    }
+
+    public void setNewMode(Mode mode) {
+        currentMode = mode;
+        openTab();
+    }
+
+    private void openTab() {
+        inflatePanelLayout(LAYOUT_LIST, currentMode.title);
+        switch (currentMode) {
+            case AROUND_PLACES:
+                break;
+            case LOVE_PLACES:
+                break;
+            case SEARCH_PLACES:
+                break;
+        }
+    }
+
+    public enum Mode {
+        AROUND_PLACES("Места рядом"),
+        LOVE_PLACES("Любимые места"),
+        SEARCH_PLACES("Поиск места");
+
+        String title;
+
+        Mode(String title) {
+            this.title = title;
         }
     }
 }
