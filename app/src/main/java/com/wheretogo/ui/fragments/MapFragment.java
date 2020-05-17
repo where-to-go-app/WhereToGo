@@ -27,12 +27,15 @@ import androidx.transition.TransitionManager;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.squareup.picasso.Picasso;
+import com.wheretogo.Application;
 import com.wheretogo.R;
 import com.wheretogo.data.BuildVars;
 import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
+import com.wheretogo.localDB.LocalPhoto;
+import com.wheretogo.localDB.LocalPlace;
 import com.wheretogo.models.MapMark;
 import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
@@ -58,6 +61,8 @@ import com.yandex.runtime.image.ImageProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class MapFragment extends Fragment{
@@ -96,6 +101,8 @@ public class MapFragment extends Fragment{
 
     private CameraListener cameraListener;
 
+    private ExecutorService service;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,7 +115,7 @@ public class MapFragment extends Fragment{
         pointsToAddOnMap = new ArrayList<>(16);
         places = new HashMap<>();
         placeMarkImg = ImageProvider.fromResource(getContext(), R.drawable.map_pin);
-
+        service = Executors.newSingleThreadExecutor();
         adapter = new PlacesAdapter((id, placeName) -> {
             inflatePanelLayout(LAYOUT_ITEM, placeName);
             setPlaceInfo(id);
@@ -226,7 +233,7 @@ public class MapFragment extends Fragment{
     }
 
     private void inflatePanelLayout(int res, String title) {
-        if (currentLayout == res || currentLayout == -1) {
+        if (currentLayout != res || currentLayout == -1) {
             Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
             TransitionManager.go(scene, new Fade());
         }
@@ -249,28 +256,85 @@ public class MapFragment extends Fragment{
     }
 
     private void setPlaceInfo(int id) {
-        remoteActions.getPlaceById(preferenceManager.getUser(), id,
-                new DefaultCallback<Place>() {
-                    @Override
-                    public void onSuccess(Place place) {
-                        for (Photo placePhoto : place.getPhotos()) {
-                            if (placePhoto.isMain()) {
-                                Picasso.get()
-                                        .load(placePhoto.getPhotoUrl())
-                                        .into(photo);
-                            }
-                        }
-                        name.setText(place.getPlaceName());
-                        desc.setText(place.getPlaceDesc());
-                        address.setText(place.getAddress());
-                        country.setText(place.getCountry());
-                    }
 
-                    @Override
-                    public void onError(int error) {
-                        Toast.makeText(getContext(), "Error has occured: " + error ,Toast.LENGTH_LONG).show();
+        service.execute(() -> {
+            LocalPlace place = Application.databaseActions.getPlaceById(id);
+            List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(id);
+            List<LocalPhoto> localPhotos1 = Application.databaseActions.getAll();
+            for (LocalPhoto ph:localPhotos1) {
+                Log.d("ff", String.valueOf(ph.getPlaceId()));
+            }
+
+            if (place != null){
+                getActivity().runOnUiThread(() ->{
+                    name.setText(place.getPlaceName());
+                    desc.setText(place.getPlaceDescription());
+                    address.setText(place.getAddress());
+                    country.setText(place.getCountry());
+                    for (LocalPhoto placePhoto : localPhotos) {
+                        Log.d("aa", placePhoto.getPhotoUrl());
+                        if (placePhoto.isMain()) {
+                            Picasso.get()
+                                    .load(placePhoto.getPhotoUrl())
+                                    .into(photo);
+                        }
                     }
                 });
+            }
+            else {
+                remoteActions.getPlaceById(preferenceManager.getUser(), id,
+                        new DefaultCallback<Place>() {
+                            @Override
+                            public void onSuccess(Place place) {
+                                for (Photo placePhoto : place.getPhotos()) {
+                                    if (placePhoto.isMain()) {
+                                        Picasso.get()
+                                                .load(placePhoto.getPhotoUrl())
+                                                .into(photo);
+                                    }
+                                }
+                                name.setText(place.getPlaceName());
+                                desc.setText(place.getPlaceDesc());
+                                address.setText(place.getAddress());
+                                country.setText(place.getCountry());
+                                service.execute(() -> {
+                                    addPlaceToCache(place, false);
+                                });
+                                Toast.makeText(getContext(), "Добавил место в кэш", Toast.LENGTH_SHORT).show();
+                            }
+                            @Override
+                            public void onError(int error) {
+                                Toast.makeText(getContext(), "Error has occured: " + error ,Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+
+        });
+
+
+
+    }
+    private void addPlaceToCache(Place place, boolean isLovePlace){
+        LocalPlace localPlace = new LocalPlace();
+        localPlace.setId(place.getId());
+        localPlace.setLatitude(place.getLatitude());
+        localPlace.setLongitude(place.getLongitude());
+        localPlace.setPlaceName(place.getPlaceName());
+        localPlace.setPlaceDescription(place.getPlaceDesc());
+        localPlace.setCreator_id(place.getCreatorId());
+        localPlace.setCountry(place.getCountry());
+        localPlace.setAddress(place.getAddress());
+        localPlace.setLovePlace(isLovePlace);
+        Application.databaseActions.addPlace(localPlace);
+        for (Photo ph: place.getPhotos()){
+            LocalPhoto localPhoto = new LocalPhoto();
+            localPhoto.setPhotoUrl(ph.getPhotoUrl());
+            localPhoto.setMain(ph.isMain());
+            localPhoto.setPlaceId(place.getId());
+            Log.d("gg", String.valueOf(ph.getId()));
+            Application.databaseActions.addPhoto(localPhoto);
+        }
+
     }
 
     private void showPlacesOnMap(Map map, List<SimplePlace> data){
