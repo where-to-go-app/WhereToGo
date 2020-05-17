@@ -1,9 +1,10 @@
 
 package com.wheretogo.models.onePlace;
 
-import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 public class Place {
 
@@ -21,19 +22,19 @@ public class Place {
     private String placeName;
     @SerializedName("creator_id")
     @Expose
-    private Integer creatorId;
+    private int creatorId;
     @SerializedName("id")
     @Expose
-    private Integer id;
+    private int id;
     @SerializedName("latitude")
     @Expose
-    private Double latitude;
+    private double latitude;
     @SerializedName("likes_count")
     @Expose
-    private Integer likesCount;
+    private int likesCount;
     @SerializedName("longitude")
     @Expose
-    private Double longitude;
+    private double longitude;
     @SerializedName("photos")
     @Expose
     private List<Photo> photos = null;
@@ -73,7 +74,7 @@ public class Place {
         this.placeName = placeName;
     }
 
-    public Integer getCreatorId() {
+    public int getCreatorId() {
         return creatorId;
     }
 
@@ -81,7 +82,7 @@ public class Place {
         this.creatorId = creatorId;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
@@ -89,7 +90,7 @@ public class Place {
         this.id = id;
     }
 
-    public Double getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
@@ -97,7 +98,7 @@ public class Place {
         this.latitude = latitude;
     }
 
-    public Integer getLikesCount() {
+    public int getLikesCount() {
         return likesCount;
     }
 
@@ -105,7 +106,7 @@ public class Place {
         this.likesCount = likesCount;
     }
 
-    public Double getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 

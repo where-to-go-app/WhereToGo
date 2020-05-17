@@ -6,12 +6,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.wheretogo.R;
+import com.wheretogo.data.local.PreferenceManager;
+import com.wheretogo.models.User;
 
 public class SettingsFragment extends Fragment {
 
@@ -19,12 +22,15 @@ public class SettingsFragment extends Fragment {
         void onLogout();
     }
 
+    private TextView textViewUserName;
     private OnLogoutListener listener;
+    private PreferenceManager preferenceManager;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         listener = (OnLogoutListener) context;
+        preferenceManager = new PreferenceManager(context);
     }
 
     @Nullable
@@ -38,6 +44,13 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        findViews(root);
+        User currentUser = preferenceManager.getUser();
+        textViewUserName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
         return root;
+    }
+
+    private void findViews(View root) {
+        textViewUserName = root.findViewById(R.id.userName);
     }
 }

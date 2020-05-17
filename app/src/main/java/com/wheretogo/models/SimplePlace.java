@@ -4,7 +4,9 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class SimplePlace {
+    @SerializedName("id")
     private int id;
+    @SerializedName("place_name")
     private String place_name;
     @SerializedName("avatar_url")
     @Expose

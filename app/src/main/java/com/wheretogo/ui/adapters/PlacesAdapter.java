@@ -1,29 +1,30 @@
 package com.wheretogo.ui.adapters;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.squareup.picasso.Picasso;
 import com.wheretogo.R;
-import com.wheretogo.asyncTasks.DownloadImageTask;
 import com.wheretogo.models.SimplePlace;
-import com.wheretogo.models.onePlace.Photo;
-import de.hdodenhof.circleimageview.CircleImageView;
 
 import java.util.Collections;
 import java.util.List;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewHolder> {
-    private View.OnClickListener onItemClickCallback;
+    private OnPlaceClickListener onItemClickCallback;
     private List<SimplePlace> simplePlaces = Collections.emptyList();
 
-    public PlacesAdapter(View.OnClickListener onItemClickCallback, List<SimplePlace> simplePlaces) {
+    public PlacesAdapter(OnPlaceClickListener onItemClickCallback) {
         this.onItemClickCallback = onItemClickCallback;
-        this.simplePlaces = simplePlaces;
     }
 
     @NonNull
@@ -35,12 +36,15 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
 
     @Override
     public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
-        holder.placeName.setText(simplePlaces.get(position).getPlaceName());
-        holder.setSimplePlace(simplePlaces.get(position));
-        DownloadImageTask downloadImageTask = new DownloadImageTask(holder.circleImageView);
-        downloadImageTask.execute(holder.simplePlace.getAvatar_url());
-
-        //holder.circleImageView.setImageBitmap(); TODO
+        SimplePlace simplePlace = simplePlaces.get(position);
+        holder.placeRoot.setOnClickListener((view) -> {
+            onItemClickCallback.onPlaceClick(simplePlace.getId(), simplePlace.getPlaceName());
+        });
+        holder.placeName.setText(simplePlace.getPlaceName());
+        Picasso.get()
+                .load(simplePlace.getAvatar_url())
+                .placeholder(new ColorDrawable(Color.GREEN))
+                .into(holder.circleImageView);
     }
 
     @Override
@@ -48,29 +52,26 @@ public class PlacesAdapter extends RecyclerView.Adapter<PlacesAdapter.PlaceViewH
         return simplePlaces.size();
     }
 
+    public void updatePlaces(List<SimplePlace> simplePlaces) {
+        this.simplePlaces = simplePlaces;
+        notifyDataSetChanged();
+    }
 
-    public class PlaceViewHolder extends RecyclerView.ViewHolder {
+    public interface OnPlaceClickListener {
+        void onPlaceClick(int id, String name);
+    }
+
+    static class PlaceViewHolder extends RecyclerView.ViewHolder {
         private final CircleImageView circleImageView;
         private final TextView placeName;
-        private final TextView placeId;
-        private SimplePlace simplePlace;
+        private final ViewGroup placeRoot;
 
         PlaceViewHolder(View view) {
             super(view);
-            view.setOnClickListener(onItemClickCallback);
             circleImageView = view.findViewById(R.id.item_place_photo);
             placeName = view.findViewById(R.id.item_place_name);
-            placeId = view.findViewById(R.id.item_place_id);
+            placeRoot = view.findViewById(R.id.item_place_root);
 
-        }
-
-        public SimplePlace getSimplePlace() {
-            return simplePlace;
-        }
-
-        public void setSimplePlace(SimplePlace simplePlace) {
-            this.simplePlace = simplePlace;
-            placeId.setText(String.valueOf(simplePlace.getId()));
         }
     }
 }

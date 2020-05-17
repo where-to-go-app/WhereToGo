@@ -24,17 +24,16 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.wheretogo.R;
+import com.wheretogo.data.local.PreferenceManager;
 import com.wheretogo.data.remote.DefaultCallback;
 import com.wheretogo.data.remote.RemoteActions;
 import com.wheretogo.data.remote.RemoteClient;
 import com.wheretogo.data.remote.geocoder.GeocoderRemoteActions;
 import com.wheretogo.data.remote.geocoder.GeocoderRemoteClient;
 import com.wheretogo.models.CreatingPlace;
-import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
 import com.wheretogo.models.geocoderModel.Country;
 import com.wheretogo.models.geocoderModel.GeocodeModel;
-import com.wheretogo.models.onePlace.Place;
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.map.CameraListener;
@@ -42,11 +41,12 @@ import com.yandex.mapkit.map.CameraPosition;
 import com.yandex.mapkit.map.CameraUpdateSource;
 import com.yandex.mapkit.map.Map;
 import com.yandex.mapkit.mapview.MapView;
+
+import java.io.ByteArrayOutputStream;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
-import java.io.ByteArrayOutputStream;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -211,11 +211,8 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] photo = stream.toByteArray();
-//        User user = new PreferenceManager(getContext()).getUser();
-//        if (user == null){
-        User user = new User("debug",  "debug", 1, "12345");
-//        }
-        CreatingPlace place = new CreatingPlace(placeName, placeDesc, new Float(pt.getLatitude()), new Float(pt.getLongitude()), country, address, province);
+        User user = new PreferenceManager(getContext()).getUser();
+        CreatingPlace place = new CreatingPlace(placeName, placeDesc, (float) pt.getLatitude(), (float) pt.getLongitude(), country, address, province);
         remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean data) {

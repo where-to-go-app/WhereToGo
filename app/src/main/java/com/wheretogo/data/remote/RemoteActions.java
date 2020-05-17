@@ -6,13 +6,12 @@ import com.wheretogo.data.remote.responses.DefaultResponse;
 import com.wheretogo.models.CreatingPlace;
 import com.wheretogo.models.SimplePlace;
 import com.wheretogo.models.User;
+import com.wheretogo.models.onePlace.Place;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.wheretogo.models.onePlace.OnePlace;
-import com.wheretogo.models.onePlace.Place;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -88,5 +87,13 @@ public class RemoteActions {
                     }
                     callback.onSuccess(response.getSimplePlaces());
                 });
+    }
+
+    public void getLovePlaces() {
+
+    }
+
+    public void getSearchPlaces() {
+
     }
 }
