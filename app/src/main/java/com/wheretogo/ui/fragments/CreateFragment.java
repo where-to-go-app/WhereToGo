@@ -92,39 +92,36 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         placeImage.setOnClickListener(this);
         submitButton = root.findViewById(R.id.create_apply_button);
         submitButton.setOnClickListener(this);
-        cameraListener = new CameraListener() {
-            @Override
-            public void onCameraPositionChanged(@NonNull Map map, @NonNull CameraPosition cameraPosition, @NonNull CameraUpdateSource cameraUpdateSource, boolean b) {
-                if (b) {
-                    Point point = map.getCameraPosition().getTarget();
-                    String geocode = point.getLongitude() + ";" + point.getLatitude();
-                    GeocoderRemoteActions geocoderRemoteActions = new GeocoderRemoteActions(new GeocoderRemoteClient());
-                    geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
-                        @Override
-                        public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
-                            Country addressDetails = response.body().getResponse().getGeoObjectCollection()
-                                    .getFeatureMember()
-                                    .get(0)
-                                    .getGeoObject()
-                                    .getMetaDataProperty()
-                                    .getGeocoderMetaData()
-                                    .getAddressDetails()
-                                    .getCountry();
-                            address = addressDetails.getAddressLine();
-                            if (addressDetails.getCountryName() != null) {
-                                country = addressDetails.getCountryName();
-                            } else {
-                                country = null;
-                            }
-                            panelTitle.setText(address);
+        cameraListener = (map, cameraPosition, cameraUpdateSource, b) -> {
+            if (b) {
+                Point point = map.getCameraPosition().getTarget();
+                String geocode = point.getLongitude() + ";" + point.getLatitude();
+                GeocoderRemoteActions geocoderRemoteActions = new GeocoderRemoteActions(new GeocoderRemoteClient());
+                geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
+                    @Override
+                    public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
+                        Country addressDetails = response.body().getResponse().getGeoObjectCollection()
+                                .getFeatureMember()
+                                .get(0)
+                                .getGeoObject()
+                                .getMetaDataProperty()
+                                .getGeocoderMetaData()
+                                .getAddressDetails()
+                                .getCountry();
+                        address = addressDetails.getAddressLine();
+                        if (addressDetails.getCountryName() != null) {
+                            country = addressDetails.getCountryName();
+                        } else {
+                            country = null;
                         }
+                        panelTitle.setText(address);
+                    }
 
-                        @Override
-                        public void onFailure(Call<GeocodeModel> call, Throwable throwable) {
-                            panelTitle.setText("Не получилось отправить запрос. Проверьте подключение к интернету");
-                        }
-                    });
-                }
+                    @Override
+                    public void onFailure(Call<GeocodeModel> call, Throwable throwable) {
+                        panelTitle.setText(R.string.error_internet);
+                    }
+                });
             }
         };
         createMapView.getMap().addCameraListener(cameraListener);
@@ -137,7 +134,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         mapPin = root.findViewById(R.id.mapPin);
         panelTitle = root.findViewById(R.id.panelTitle);
         panelTitle.setTextSize(14);
-        panelTitle.setText("Адрес:"); // TODO
+        panelTitle.setText(R.string.address_new_place_hint);
     }
 
     @Override
@@ -179,7 +176,7 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
         if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
             startActivityForResult(takePictureIntent, REQUEST_CAMERA);
         } else {
-            Toast.makeText(getContext(), "Error has occured", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.error_occured), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -193,17 +190,17 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
     private void createPlace() {
         String placeName = placeNameEdit.getText().toString().trim();
         if (placeName.isEmpty()) {
-            Toast.makeText(getContext(), "Empty name edit", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.empty_place_name), Toast.LENGTH_SHORT).show();
             return;
         }
         String placeDesc = placeDescriptionEdit.getText().toString().trim();
         if (placeDesc.isEmpty()) {
-            Toast.makeText(getContext(), "Desc is empty", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.empty_place_desc), Toast.LENGTH_SHORT).show();
             return;
         }
         Drawable drawable = placeImage.getDrawable();
         if (!(drawable instanceof BitmapDrawable)) {
-            Toast.makeText(getContext(), "Необходимо установить фото", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getString(R.string.empty_place_photo), Toast.LENGTH_SHORT).show();
             return;
         }
         Point pt= createMapView.getMap().getCameraPosition().getTarget();
@@ -219,18 +216,18 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
                 if (data) {
                     // Место успешно сохранено
                     if (getContext() != null)
-                        Toast.makeText(getContext(), "success", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getString(R.string.success_add_place), Toast.LENGTH_SHORT).show();
                 } else {
                     // Сервер вернул ошибку. Например CODE_AUTH_ERROR
                     if (getContext() != null)
-                        Toast.makeText(getContext(), "failed", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getString(R.string.failed_add_place), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onError(int error) {
                 // Произошла ошибка при попытке обратиться к серверу
-                Toast.makeText(getContext(), "error", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -238,7 +235,12 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
-            if ((requestCode == REQUEST_CAMERA || requestCode == REQUEST_STORAGE) && data.getData() != null) {
+            if (requestCode == REQUEST_CAMERA && data.getExtras() != null){
+                Bitmap photo = (Bitmap) data.getExtras().get("data");
+                placeImage.setImageBitmap(photo);
+                return;
+            }
+            if ((requestCode == REQUEST_STORAGE) && data.getData() != null) {
                 placeImage.setImageURI(data.getData());
             }
         } else {

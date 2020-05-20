@@ -266,10 +266,6 @@ public class MapFragment extends Fragment{
             LocalPlace place = Application.databaseActions.getPlaceById(id);
             List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(id);
             List<LocalPhoto> localPhotos1 = Application.databaseActions.getAll();
-            for (LocalPhoto ph:localPhotos1) {
-                Log.d("ff", String.valueOf(ph.getPlaceId()));
-            }
-
             if (place != null){
                 getActivity().runOnUiThread(() ->{
                     name.setText(place.getPlaceName());
@@ -277,7 +273,6 @@ public class MapFragment extends Fragment{
                     address.setText(place.getAddress());
                     country.setText(place.getCountry());
                     for (LocalPhoto placePhoto : localPhotos) {
-                        Log.d("aa", placePhoto.getPhotoUrl());
                         if (placePhoto.isMain()) {
                             Picasso.get()
                                     .load(placePhoto.getPhotoUrl())
@@ -305,11 +300,11 @@ public class MapFragment extends Fragment{
                                 service.execute(() -> {
                                     addPlaceToCache(place, false);
                                 });
-                                Toast.makeText(getContext(), "Добавил место в кэш", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), getString(R.string.add_to_cash), Toast.LENGTH_SHORT).show();
                             }
                             @Override
                             public void onError(int error) {
-                                Toast.makeText(getContext(), "Error has occured: " + error ,Toast.LENGTH_LONG).show();
+                                Toast.makeText(getContext(), getString(R.string.error_occured) + error ,Toast.LENGTH_LONG).show();
                             }
                         });
             }
@@ -336,7 +331,6 @@ public class MapFragment extends Fragment{
             localPhoto.setPhotoUrl(ph.getPhotoUrl());
             localPhoto.setMain(ph.isMain());
             localPhoto.setPlaceId(place.getId());
-            Log.d("gg", String.valueOf(ph.getId()));
             Application.databaseActions.addPhoto(localPhoto);
         }
 
@@ -382,7 +376,7 @@ public class MapFragment extends Fragment{
     }
 
     private void openTab() {
-        inflatePanelLayout(LAYOUT_LIST, currentMode.title);
+        inflatePanelLayout(LAYOUT_LIST, this.getString(currentMode.title));
         requestPlaces();
     }
 
@@ -429,17 +423,16 @@ public class MapFragment extends Fragment{
     }
 
     private void requestSearchPlaces() {
-
     }
 
     public enum Mode {
-        AROUND_PLACES("Места рядом"),
-        LOVE_PLACES("Любимые места"),
-        SEARCH_PLACES("Поиск места");
+        AROUND_PLACES( R.string.nav_places),
+        LOVE_PLACES(R.string.nav_favorite),
+        SEARCH_PLACES(R.string.nav_search);
 
-        String title;
+        int title;
 
-        Mode(String title) {
+        Mode(int title) {
             this.title = title;
         }
     }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WhereToGo</string>
+    <string name = "nav_settings"> Ayarlar </string>
+    <string name = "nav_create"> Oluştur </string>
+    <string name = "nav_favorite"> Yerlerim </string>
+    <string name = "nav_search"> Ara </string>
+    <string name = "nav_places"> Yakındaki yerler </string>
+
+    <string name = "login_button"> VK ile giriş yapın </string>
+    <string name = "logout_button"> Çıkış </string>
+    <string name = "error_message"> Bir şeyler ters gitti </string>
+    <string name = "newPlaceName"> Ad </string>
+    <string name = "newPlaceName_desc"> Yer için bir ad ve açıklama girin </string>
+    <string name = "error_internet"> İstek gönderilemedi. İnternet bağlantınızı kontrol edin </string>
+    <string name = "add_to_cash"> Önbellek konumu eklendi </string>
+    <string name = "error_occured"> Bir hata oluştu: </string>
+    <string name = "empty_place_name"> Boş yer adı </string>
+    <string name = "empty_place_desc"> Desc boş </string>
+    <string name = "empty_place_photo"> Fotoğraf ayarlanmalıdır </string>
+    <string name = "success_add_place"> Yer başarıyla oluşturuldu </string>
+    <string name = "failed_add_place"> Yer oluşturulamadı </string>
+    <string name = "newPlace_name_hint"> Örneğin, Grove Street\'teki Graffiti </string>
+    <string name = "newPlace_desc_hint"> Örneğin, Güzel, sıradışı ... </string>
+    <string name = "newPlace_desc"> Açıklama </string>
+    <string name = "newPlace_submit_btn"> Yer Oluştur </string>
+    <string name = "camera_hint"> Kamera </string>
+    <string name = "storage_hint"> İndir </string>
+    <string name = "address_new_place_hint"> Adres </string>
+
+</resources>

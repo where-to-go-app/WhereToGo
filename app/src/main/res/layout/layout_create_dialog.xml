@@ -25,7 +25,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:text="Камера"
+            android:text="@string/camera_hint"
             android:textColor="@android:color/black"
             android:textSize="18sp" />
     </LinearLayout>
@@ -50,7 +50,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:text="Загрузить"
+            android:text="@string/storage_hint"
             android:textColor="@android:color/black"
             android:textSize="18sp" />
     </LinearLayout>

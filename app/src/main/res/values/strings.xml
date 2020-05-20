@@ -1,25 +1,31 @@
 <resources>
-    <string name="app_name">WhereToGo</string>
-
-    <string name="nav_places">Места рядом</string>
+    <string name = "app_name"> WhereToGo </string>
     <string name="nav_settings">Настройки</string>
     <string name="nav_create">Создать</string>
     <string name="nav_favorite">Мои места</string>
     <string name="nav_search">Поиск</string>
+    <string name="nav_places">Места рядом</string>
 
     <string name="login_button">Войти через VK</string>
     <string name="logout_button">Выход</string>
     <string name="error_message">Что-то пошло не так</string>
-
+    <string name="newPlaceName">Название</string>
     <string name="newPlaceName_desc">Введите название и описание места</string>
-    <string name="newPlace_addImage">Добавить фото</string>
-    <string name="newPlace_addPlace">Добавить Место</string>
-    <string name="newPlaceNameHint">Введите название места</string>
-    <string name="newPlaceDescHint">Краткое описание места</string>
-    <string name="address_new_place_hint">Aдрес:</string>
-    <string name="addPhotosHint">Добавьте фотографии (нажмите на фотографию, чтобы сделать ее главной. Главная фотография будет являться своеобразным "аватаром места")</string>
-    <string name="createPointMapHint">Отметьте точку на карте</string>
+    <string name="error_internet">Не получилось отправить запрос. Проверьте подключение к интернету</string>
+    <string name="add_to_cash">Добавил место в кэш</string>
+    <string name="error_occured">Произошла ошибка:</string>
+    <string name="empty_place_name">Пустое название места</string>
+    <string name="empty_place_desc">Desc is empty</string>
+    <string name="empty_place_photo">Необходимо установить фото</string>
+    <string name="success_add_place">Место успешно создано</string>
+    <string name="failed_add_place">Не удалось создать место</string>
+    <string name="newPlace_name_hint">Например, Графити на грув стрит</string>
+    <string name="newPlace_desc_hint">Например, Красивое, необычное ...</string>
+    <string name="newPlace_desc">Описание</string>
+    <string name="newPlace_submit_btn">Создать место</string>
+    <string name="camera_hint">Камера</string>
+    <string name="storage_hint">Загрузить</string>
+    <string name="address_new_place_hint">Адрес</string>
 
-
-    <integer name="com_vk_sdk_AppId">7385373</integer>
+        <integer name = "com_vk_sdk_AppId"> 7385373 </integer>
 </resources>
