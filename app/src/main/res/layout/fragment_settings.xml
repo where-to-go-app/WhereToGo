@@ -13,10 +13,12 @@
                 android:layout_height="wrap_content" app:srcCompat="@drawable/bar_shadow" android:id="@+id/imageView4"
                 android:layout_weight="1" tools:srcCompat="@drawable/bar_shadow"/>
     </LinearLayout>
+
     <TextView
         android:id="@+id/userName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:text="@string/nav_settings"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

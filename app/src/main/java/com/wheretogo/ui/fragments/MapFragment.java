@@ -90,6 +90,7 @@ public class MapFragment extends Fragment{
     private TextView desc;
     private TextView country;
     private TextView address;
+    private ImageView mapItemBack;
 
     private PreferenceManager preferenceManager;
 
@@ -251,6 +252,10 @@ public class MapFragment extends Fragment{
             desc = panelPlaceholder.findViewById(R.id.mapItemDesc);
             address = panelPlaceholder.findViewById(R.id.mapItemAddress);
             country = panelPlaceholder.findViewById(R.id.mapItemCountry);
+            mapItemBack = panelPlaceholder.findViewById(R.id.mapItemBack);
+            mapItemBack.setOnClickListener(v -> {
+                openTab();
+            });
             currentLayout = LAYOUT_ITEM;
         }
     }
@@ -357,6 +362,8 @@ public class MapFragment extends Fragment{
                     mark.getPt(),
                     placeMarkImg);
             MapObjectTapListener onPointTabListener = (mapObject, point) -> {
+                inflatePanelLayout(LAYOUT_ITEM, mark.getPlace_name());
+                setPlaceInfo(mark.getId());
                 return true;
             };
             placeMark.addTapListener(onPointTabListener);

@@ -46,7 +46,7 @@ public class SettingsFragment extends Fragment {
 
         findViews(root);
         User currentUser = preferenceManager.getUser();
-        textViewUserName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
+        textViewUserName.setText(currentUser.getFirstName() + " " + currentUser.getLastName() + "\n" + currentUser.getToken());
         return root;
     }
 
