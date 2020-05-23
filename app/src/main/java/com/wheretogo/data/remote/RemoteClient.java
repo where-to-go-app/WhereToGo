@@ -2,6 +2,7 @@ package com.wheretogo.data.remote;
 
 import android.os.Handler;
 
+import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.wheretogo.data.remote.responses.DefaultResponse;
@@ -13,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
+import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -42,26 +44,4 @@ public class RemoteClient {
         return remoteApi;
     }
 
-    <T extends DefaultResponse> void performRequest(final Call<T> call, final Request<T> req) {
-        executor.execute(() -> {
-            try {
-                Response<T> response = call.execute();
-                if (response.isSuccessful()) {
-                    handleResponse(req, response.body());
-                } else {
-                    handleResponse(req, (T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
-                }
-            } catch (IOException e) {
-                handleResponse(req, (T) new DefaultResponse(DefaultResponse.RESPONSE_UNKNOWN_ERROR));
-            }
-        });
-    }
-
-    private <T extends DefaultResponse> void handleResponse(final Request<T> req, T response) {
-        handler.post(() -> req.onResult(response));
-    }
-
-    public interface Request<T extends DefaultResponse> {
-        void onResult(T response);
-    }
 }

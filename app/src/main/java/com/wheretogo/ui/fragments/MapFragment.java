@@ -268,6 +268,7 @@ public class MapFragment extends Fragment{
             List<LocalPhoto> localPhotos1 = Application.databaseActions.getAll();
             if (place != null){
                 getActivity().runOnUiThread(() ->{
+                    panelTitle.setText(place.getPlaceName());
                     name.setText(place.getPlaceName());
                     desc.setText(place.getPlaceDescription());
                     address.setText(place.getAddress());
@@ -413,7 +414,7 @@ public class MapFragment extends Fragment{
 
                     @Override
                     public void onError(int error) {
-
+                        Toast.makeText(getContext(), getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
                     }
                 });
     }
