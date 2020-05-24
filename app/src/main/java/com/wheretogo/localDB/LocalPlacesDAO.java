@@ -14,8 +14,11 @@ public interface LocalPlacesDAO {
     @Update
     void update(LocalPlace place);
 
-    @Query("SELECT * FROM localplace where :left < longitude < :right and :bottom < longitude < :top and isLovePlace == :isFavorites" )
-    List<LocalPlace> getPlacesAround(double left, double top, double right, double bottom, boolean isFavorites);
+    @Query("SELECT * FROM localplace")
+    List<LocalPlace> getAllPlaces();
+
+    @Query("SELECT * FROM localplace where isLovePlace" )
+    List<LocalPlace> getFavoritePlaces();
 
     @Query("SELECT * FROM localplace where :id == id")
     LocalPlace getPlaceById(int id);

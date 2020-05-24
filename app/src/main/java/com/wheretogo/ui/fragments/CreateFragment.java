@@ -33,6 +33,7 @@ import com.wheretogo.data.remote.geocoder.GeocoderRemoteClient;
 import com.wheretogo.models.CreatingPlace;
 import com.wheretogo.models.User;
 import com.wheretogo.models.geocoderModel.Country;
+import com.wheretogo.models.geocoderModel.FeatureMember;
 import com.wheretogo.models.geocoderModel.GeocodeModel;
 import com.yandex.mapkit.MapKitFactory;
 import com.yandex.mapkit.geometry.Point;
@@ -43,6 +44,9 @@ import com.yandex.mapkit.map.Map;
 import com.yandex.mapkit.mapview.MapView;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -100,8 +104,9 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
                 geocoderRemoteActions.getGeocoding(geocode, new Callback<GeocodeModel>() {
                     @Override
                     public void onResponse(Call<GeocodeModel> call, Response<GeocodeModel> response) {
-                        Country addressDetails = response.body().getResponse().getGeoObjectCollection()
-                                .getFeatureMember()
+                        List<FeatureMember> featureMembers = response.body().getResponse().getGeoObjectCollection()
+                                .getFeatureMember();
+                        Country addressDetails = featureMembers
                                 .get(0)
                                 .getGeoObject()
                                 .getMetaDataProperty()
@@ -204,32 +209,42 @@ public class CreateFragment extends Fragment implements View.OnClickListener {
             return;
         }
         Point pt= createMapView.getMap().getCameraPosition().getTarget();
-        Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] photo = stream.toByteArray();
-        User user = new PreferenceManager(getContext()).getUser();
-        CreatingPlace place = new CreatingPlace(placeName, placeDesc, (float) pt.getLatitude(), (float) pt.getLongitude(), country, address, province);
-        remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
             @Override
-            public void onSuccess(Boolean data) {
-                if (data) {
-                    // Место успешно сохранено
-                    if (getContext() != null)
-                        Toast.makeText(getContext(), getString(R.string.success_add_place), Toast.LENGTH_SHORT).show();
-                } else {
-                    // Сервер вернул ошибку. Например CODE_AUTH_ERROR
-                    if (getContext() != null)
-                        Toast.makeText(getContext(), getString(R.string.failed_add_place), Toast.LENGTH_SHORT).show();
-                }
-            }
+            public void run() {
 
-            @Override
-            public void onError(int error) {
-                // Произошла ошибка при попытке обратиться к серверу
-                Toast.makeText(getContext(), getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
+                Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] photo = stream.toByteArray();
+                if (getContext() == null)
+                    return;
+                User user = new PreferenceManager(getContext()).getUser();
+                CreatingPlace place = new CreatingPlace(placeName, placeDesc, (float) pt.getLatitude(), (float) pt.getLongitude(), country, address, province);
+
+                remoteActions.createPlace(photo, place, user, new DefaultCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean data) {
+                        if (data) {
+                            // Место успешно сохранено
+                            if (getContext() != null)
+                                Toast.makeText(getContext(), getString(R.string.success_add_place), Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Сервер вернул ошибку. Например CODE_AUTH_ERROR
+                            if (getContext() != null)
+                                Toast.makeText(getContext(), getString(R.string.failed_add_place), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(int error) {
+                        // Произошла ошибка при попытке обратиться к серверу
+                        Toast.makeText(getContext(), getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
+
     }
 
     @Override

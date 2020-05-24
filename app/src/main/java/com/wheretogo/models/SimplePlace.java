@@ -19,7 +19,6 @@ public class SimplePlace {
         this.latitude = latitude;
         this.longitude = longitude;
         this.avatar_url = avatar_url;
-
     }
 
     public int getId() {

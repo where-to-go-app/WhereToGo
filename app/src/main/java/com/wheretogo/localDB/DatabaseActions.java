@@ -11,8 +11,8 @@ public class DatabaseActions {
         this.db = db;
     }
 
-    public List<LocalPlace> getPlacesAround(double left, double top, double right, double bottom, boolean isFavorites){
-        return  db.getPlacesDao().getPlacesAround(left, top, right, bottom, isFavorites);
+    public List<LocalPlace> getFavoritePlaces(){
+        return  db.getPlacesDao().getFavoritePlaces();
     }
 
     public void addPlace(LocalPlace... places){
@@ -23,6 +23,11 @@ public class DatabaseActions {
                 db.getPlacesDao().update(place);
             }
         }
+    }
+
+    public  List<LocalPlace> getAllPlaces(){
+        return db.getPlacesDao().getAllPlaces();
+
     }
 
     public LocalPlace getPlaceById(int id){

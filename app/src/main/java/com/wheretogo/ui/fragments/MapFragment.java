@@ -146,12 +146,36 @@ public class MapFragment extends Fragment{
         };
         mapView.getMap().addCameraListener(cameraListener);
         mapView.getMap().setRotateGesturesEnabled(false);
-
-
         if (getArguments() != null) {
             currentMode = (Mode) getArguments().getSerializable(MODE_EXTRA);
             openTab();
         }
+        service.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<SimplePlace> sPls = new ArrayList<>();
+                List<LocalPlace> pls = Application.databaseActions.getAllPlaces();
+                for (LocalPlace p: pls) {
+                    List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(p.getId());
+                    for (LocalPhoto placePhoto : localPhotos) {
+                        if (placePhoto.isMain()) {
+                            sPls.add(new SimplePlace(p.getPlaceName(),
+                                    (float)p.getLatitude(),
+                                    (float)p.getLongitude(),
+                                    placePhoto.getPhotoUrl()));
+                        }
+                    }
+                }
+                if (getActivity() != null)
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showPlacesOnMap(mapView.getMap(), sPls);
+                        }
+                    });
+            }
+        });
+
         return root;
     }
 
@@ -265,7 +289,6 @@ public class MapFragment extends Fragment{
         service.execute(() -> {
             LocalPlace place = Application.databaseActions.getPlaceById(id);
             List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(id);
-            List<LocalPhoto> localPhotos1 = Application.databaseActions.getAll();
             if (place != null){
                 getActivity().runOnUiThread(() ->{
                     panelTitle.setText(place.getPlaceName());
@@ -305,7 +328,7 @@ public class MapFragment extends Fragment{
                             }
                             @Override
                             public void onError(int error) {
-                                Toast.makeText(getContext(), getString(R.string.error_occured) + error ,Toast.LENGTH_LONG).show();
+
                             }
                         });
             }
