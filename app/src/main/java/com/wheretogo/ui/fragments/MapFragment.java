@@ -42,6 +42,7 @@ import com.wheretogo.models.User;
 import com.wheretogo.models.onePlace.Photo;
 import com.wheretogo.models.onePlace.Place;
 import com.wheretogo.ui.adapters.PlacesAdapter;
+import com.wheretogo.utils.Debounce;
 import com.yandex.mapkit.Animation;
 import com.yandex.mapkit.MapKit;
 import com.yandex.mapkit.MapKitFactory;
@@ -49,12 +50,7 @@ import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.location.Location;
 import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
-import com.yandex.mapkit.map.CameraListener;
-import com.yandex.mapkit.map.CameraPosition;
-import com.yandex.mapkit.map.Map;
-import com.yandex.mapkit.map.MapObjectTapListener;
-import com.yandex.mapkit.map.PlacemarkMapObject;
-import com.yandex.mapkit.map.VisibleRegion;
+import com.yandex.mapkit.map.*;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -65,7 +61,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class MapFragment extends Fragment{
+public class MapFragment extends Fragment implements MapObjectTapListener{
 
     private MapView mapView;
     private ImageView mapPin;
@@ -103,6 +99,8 @@ public class MapFragment extends Fragment{
     private CameraListener cameraListener;
 
     private ExecutorService service;
+
+    private Debounce mDebounce = new Debounce(5000);
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -150,32 +148,6 @@ public class MapFragment extends Fragment{
             currentMode = (Mode) getArguments().getSerializable(MODE_EXTRA);
             openTab();
         }
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<SimplePlace> sPls = new ArrayList<>();
-                List<LocalPlace> pls = Application.databaseActions.getAllPlaces();
-                for (LocalPlace p: pls) {
-                    List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(p.getId());
-                    for (LocalPhoto placePhoto : localPhotos) {
-                        if (placePhoto.isMain()) {
-                            sPls.add(new SimplePlace(p.getPlaceName(),
-                                    (float)p.getLatitude(),
-                                    (float)p.getLongitude(),
-                                    placePhoto.getPhotoUrl()));
-                        }
-                    }
-                }
-                if (getActivity() != null)
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showPlacesOnMap(mapView.getMap(), sPls);
-                        }
-                    });
-            }
-        });
-
         return root;
     }
 
@@ -248,6 +220,7 @@ public class MapFragment extends Fragment{
         MapKitFactory.getInstance().onStart();
         findGeoPosition();
         imageButton.setOnClickListener(v -> findGeoPosition());
+        getPlacesFromCashe();
     }
 
     @Override
@@ -257,7 +230,7 @@ public class MapFragment extends Fragment{
         MapKitFactory.getInstance().onStop();
     }
 
-    private void inflatePanelLayout(int res, String title) {
+    public void inflatePanelLayout(int res, String title) {
         if (currentLayout != res || currentLayout == -1) {
             Scene scene = Scene.getSceneForLayout(panelPlaceholder, res, getContext());
             TransitionManager.go(scene, new Fade());
@@ -284,8 +257,7 @@ public class MapFragment extends Fragment{
         }
     }
 
-    private void setPlaceInfo(int id) {
-
+    public void setPlaceInfo(int id) {
         service.execute(() -> {
             LocalPlace place = Application.databaseActions.getPlaceById(id);
             List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(id);
@@ -324,15 +296,16 @@ public class MapFragment extends Fragment{
                                 service.execute(() -> {
                                     addPlaceToCache(place, false);
                                 });
-                                Toast.makeText(getContext(), getString(R.string.add_to_cash), Toast.LENGTH_SHORT).show();
                             }
                             @Override
                             public void onError(int error) {
-
+                                name.setText(R.string.newPlaceName);
+                                desc.setText("");
+                                address.setText(R.string.error_internet);
+                                country.setText("");
                             }
                         });
             }
-
         });
 
 
@@ -360,6 +333,46 @@ public class MapFragment extends Fragment{
 
     }
 
+    private void getPlacesFromCashe(){
+        service.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<SimplePlace> sPls = new ArrayList<>();
+                List<LocalPlace> pls = Application.databaseActions.getAllPlaces();
+                for (LocalPlace p: pls) {
+                    List<LocalPhoto> localPhotos = Application.databaseActions.getPhotosToPlace(p.getId());
+                    for (LocalPhoto placePhoto : localPhotos) {
+                        if (placePhoto.isMain()) {
+                            sPls.add(new SimplePlace(p.getPlaceName(),
+                                    (float)p.getLatitude(),
+                                    (float)p.getLongitude(),
+                                    placePhoto.getPhotoUrl(),
+                                    p.getId()));
+                        }
+                    }
+                }
+                if (getActivity() != null)
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            showPlacesOnMap(mapView.getMap(), sPls);
+                            adapter.updatePlaces(sPls);
+                        }
+                    });
+            }
+        });
+    }
+
+    private MapObjectTapListener onPointTabListener = new MapObjectTapListener() {
+        @Override
+        public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point){
+            MapMark mark = (MapMark)mapObject.getUserData();
+            inflatePanelLayout(LAYOUT_ITEM, mark.getPlace_name());
+            setPlaceInfo(mark.getId());
+            return true;
+        }
+        };
+
     private void showPlacesOnMap(Map map, List<SimplePlace> data){
         pointsToAddOnMap.clear();
         for (SimplePlace simplePlace : data) {
@@ -379,13 +392,10 @@ public class MapFragment extends Fragment{
             PlacemarkMapObject placeMark = map.getMapObjects().addPlacemark(
                     mark.getPt(),
                     placeMarkImg);
-            MapObjectTapListener onPointTabListener = (mapObject, point) -> {
-                inflatePanelLayout(LAYOUT_ITEM, mark.getPlace_name());
-                setPlaceInfo(mark.getId());
-                return true;
-            };
-            placeMark.addTapListener(onPointTabListener);
+
             placeMark.setUserData(mark);
+            placeMark.addTapListener(onPointTabListener);
+
             places.put(mark, placeMark);
         }
     }
@@ -429,7 +439,7 @@ public class MapFragment extends Fragment{
                 new DefaultCallback<List<SimplePlace>>() {
                     @Override
                     public void onSuccess(List<SimplePlace> data) {
-                        if (getActivity() != null){
+                        if (getActivity() != null) {
                             getActivity().runOnUiThread(() -> showPlacesOnMap(mapView.getMap(), data));
                             adapter.updatePlaces(data);
                         }
@@ -437,7 +447,11 @@ public class MapFragment extends Fragment{
 
                     @Override
                     public void onError(int error) {
-                        Toast.makeText(getContext(), getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
+
+                            mDebounce.attempt(() -> {
+                                if (getActivity() != null)
+                                    Toast.makeText(getContext(), getActivity().getString(R.string.error_internet), Toast.LENGTH_SHORT).show();
+                            });
                     }
                 });
     }
@@ -447,6 +461,11 @@ public class MapFragment extends Fragment{
     }
 
     private void requestSearchPlaces() {
+    }
+
+    @Override
+    public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
+        return false;
     }
 
     public enum Mode {

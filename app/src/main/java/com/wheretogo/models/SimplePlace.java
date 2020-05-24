@@ -14,11 +14,12 @@ public class SimplePlace {
     private float latitude;
     private float longitude;
 
-    public SimplePlace(String placeName, float latitude, float longitude, String avatar_url) {
+    public SimplePlace(String placeName, float latitude, float longitude, String avatar_url, int id) {
         this.place_name = placeName;
         this.latitude = latitude;
         this.longitude = longitude;
         this.avatar_url = avatar_url;
+        this.id = id;
     }
 
     public int getId() {
