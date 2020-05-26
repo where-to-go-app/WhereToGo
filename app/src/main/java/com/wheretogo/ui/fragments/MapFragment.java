@@ -50,7 +50,13 @@ import com.yandex.mapkit.geometry.Point;
 import com.yandex.mapkit.location.Location;
 import com.yandex.mapkit.location.LocationListener;
 import com.yandex.mapkit.location.LocationStatus;
-import com.yandex.mapkit.map.*;
+import com.yandex.mapkit.map.CameraListener;
+import com.yandex.mapkit.map.CameraPosition;
+import com.yandex.mapkit.map.Map;
+import com.yandex.mapkit.map.MapObject;
+import com.yandex.mapkit.map.MapObjectTapListener;
+import com.yandex.mapkit.map.PlacemarkMapObject;
+import com.yandex.mapkit.map.VisibleRegion;
 import com.yandex.mapkit.mapview.MapView;
 import com.yandex.runtime.image.ImageProvider;
 
@@ -73,8 +79,6 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
     private static final int LAYOUT_LIST = R.layout.layout_map_list;
     private static final int LAYOUT_ITEM = R.layout.layout_map_item;
     private int currentLayout = -1;
-    private Mode currentMode = Mode.AROUND_PLACES;
-    public static final String MODE_EXTRA = "mode_extra";
 
     // layout list
     private RecyclerView placesList;
@@ -139,15 +143,11 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
         });
         cameraListener  = (map, cameraPosition, cameraUpdateSource, b) -> {
             if (b) {
-                requestPlaces();
+                requestPlacesAround();
             }
         };
         mapView.getMap().addCameraListener(cameraListener);
         mapView.getMap().setRotateGesturesEnabled(false);
-        if (getArguments() != null) {
-            currentMode = (Mode) getArguments().getSerializable(MODE_EXTRA);
-            openTab();
-        }
         return root;
     }
 
@@ -251,7 +251,7 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
             country = panelPlaceholder.findViewById(R.id.mapItemCountry);
             mapItemBack = panelPlaceholder.findViewById(R.id.mapItemBack);
             mapItemBack.setOnClickListener(v -> {
-                openTab();
+                requestPlacesAround();
             });
             currentLayout = LAYOUT_ITEM;
         }
@@ -400,35 +400,8 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
         }
     }
 
-    public Mode getCurrentMode() {
-        return currentMode;
-    }
-
-    public void setNewMode(Mode mode) {
-        currentMode = mode;
-        openTab();
-    }
-
-    private void openTab() {
-        inflatePanelLayout(LAYOUT_LIST, this.getString(currentMode.title));
-        requestPlaces();
-    }
-
-    private void requestPlaces() {
-        switch (currentMode) {
-            case AROUND_PLACES:
-                requestPlacesAround();
-                break;
-            case LOVE_PLACES:
-                requestLovePlaces();
-                break;
-            case SEARCH_PLACES:
-                requestSearchPlaces();
-                break;
-        }
-    }
-
     private void requestPlacesAround() {
+        inflatePanelLayout(LAYOUT_LIST, "Места рядом");
         VisibleRegion mapVisibleRegion = mapView.getMap().getVisibleRegion();
         Point topLeft = mapVisibleRegion.getTopLeft();
         Point bottomRight = mapVisibleRegion.getBottomRight();
@@ -456,27 +429,8 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
                 });
     }
 
-    private void requestLovePlaces() {
-
-    }
-
-    private void requestSearchPlaces() {
-    }
-
     @Override
     public boolean onMapObjectTap(@NonNull MapObject mapObject, @NonNull Point point) {
         return false;
-    }
-
-    public enum Mode {
-        AROUND_PLACES( R.string.nav_places),
-        LOVE_PLACES(R.string.nav_favorite),
-        SEARCH_PLACES(R.string.nav_search);
-
-        int title;
-
-        Mode(int title) {
-            this.title = title;
-        }
     }
 }

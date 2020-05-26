@@ -117,12 +117,4 @@ public class RemoteActions {
             }
         });
     }
-
-    public void getLovePlaces() {
-
-    }
-
-    public void getSearchPlaces() {
-
-    }
 }

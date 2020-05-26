@@ -5,14 +5,6 @@
         android:title="@string/nav_places"
         android:icon="@drawable/nav_places"/>
     <item
-        android:id="@+id/nav_search"
-        android:title="@string/nav_search"
-        android:icon="@drawable/nav_search"/>
-    <item
-        android:id="@+id/nav_favorite"
-        android:title="@string/nav_favorite"
-        android:icon="@drawable/nav_favorite"/>
-    <item
         android:id="@+id/nav_create"
         android:title="@string/nav_create"
         android:icon="@drawable/nav_create"/>

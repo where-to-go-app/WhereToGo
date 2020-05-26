@@ -43,22 +43,11 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
 
         bottomNavigation.setOnNavigationItemSelectedListener((item) -> {
             Fragment nextFragment;
-            MapFragment.Mode mapMode = null;
 
             switch (item.getItemId()) {
                 case R.id.nav_places:
-                    mapMode = MapFragment.Mode.AROUND_PLACES;
                     nextFragment = new MapFragment();
                     break;
-                case R.id.nav_search:
-                    mapMode = MapFragment.Mode.SEARCH_PLACES;
-                    nextFragment = new MapFragment();
-                    break;
-                case R.id.nav_favorite: {
-                    mapMode = MapFragment.Mode.LOVE_PLACES;
-                    nextFragment = new MapFragment();
-                    break;
-                }
                 case R.id.nav_create: {
                     nextFragment = new CreateFragment();
                     break;
@@ -68,22 +57,6 @@ public class MainActivity extends AppCompatActivity implements SettingsFragment.
                     break;
                 }
                 default: return false;
-            }
-
-            Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.placeholder);
-
-            if (nextFragment instanceof MapFragment && currentFragment instanceof MapFragment) {
-                MapFragment mapFragment = ((MapFragment) currentFragment);
-                if (mapFragment.getCurrentMode() != mapMode) {
-                    mapFragment.setNewMode(mapMode);
-                }
-                return true;
-
-            }
-            if (nextFragment instanceof MapFragment) {
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(MapFragment.MODE_EXTRA, mapMode);
-                nextFragment.setArguments(bundle);
             }
 
             getSupportFragmentManager().beginTransaction()
