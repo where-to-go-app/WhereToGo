@@ -26,6 +26,7 @@
     <string name="camera_hint">Камера</string>
     <string name="storage_hint">Загрузить</string>
     <string name="address_new_place_hint">Адрес</string>
+    <string name="title_places_around">Места рядом</string>
 
         <integer name = "com_vk_sdk_AppId"> 7385373 </integer>
 </resources>

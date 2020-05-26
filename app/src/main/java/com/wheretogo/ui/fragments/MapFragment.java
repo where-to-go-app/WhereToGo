@@ -148,6 +148,7 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
         };
         mapView.getMap().addCameraListener(cameraListener);
         mapView.getMap().setRotateGesturesEnabled(false);
+        panelTitle.setText(R.string.title_places_around);
         return root;
     }
 
@@ -401,7 +402,7 @@ public class MapFragment extends Fragment implements MapObjectTapListener{
     }
 
     private void requestPlacesAround() {
-        inflatePanelLayout(LAYOUT_LIST, "Места рядом");
+        inflatePanelLayout(LAYOUT_LIST, getString(R.string.title_places_around));
         VisibleRegion mapVisibleRegion = mapView.getMap().getVisibleRegion();
         Point topLeft = mapVisibleRegion.getTopLeft();
         Point bottomRight = mapVisibleRegion.getBottomRight();
